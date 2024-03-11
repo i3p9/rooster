@@ -111,7 +111,6 @@ def get_episode_data_from_api(url):
 
 
 def show_stuff(username, password, vod_url):
-    print(f"hello {vod_url} {username} {password}")
     api_url = get_api_url(url=vod_url)
     episode_data = get_episode_data_from_api(api_url)
     downloader(username, password, vod_url, episode_data)
