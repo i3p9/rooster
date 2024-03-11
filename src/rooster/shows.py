@@ -724,5 +724,5 @@ shows = [
 def get_show_name_from_id(show_id):
     for show in shows:
         if "uuid" in show and show["uuid"] == show_id:
-            return show["name"]
+            return show["title"]
     return None

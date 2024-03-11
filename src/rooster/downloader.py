@@ -82,18 +82,14 @@ def get_episode_data_from_api(url):
             episode_id = episode_obj.get("id")
 
             episode_type = episode_obj.get("type")
-
-            if episode_type is not "bonus_content":
-                show_title = attributes.get("show_title")
-            else:
-                show_id = show_title = attributes.get("show_id")
-                show_title = get_show_name_from_id(show_id)
-
             attributes = episode_obj.get("attributes", {})
             display_title = attributes.get("display_title")
             channel_id = attributes.get("channel_id")
             original_air_date_full = attributes.get("original_air_date", "")
             is_first_content = attributes.get("is_sponsors_only")
+            show_id = show_title = attributes.get("show_id")
+            show_title = get_show_name_from_id(show_id)
+
             original_air_date = (
                 original_air_date_full.split("T")[0]
                 if "T" in original_air_date_full
