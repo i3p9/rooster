@@ -6,13 +6,13 @@ import argparse
 def main():
     parser = argparse.ArgumentParser(description="Process command line arguments")
 
-    parser.add_argument("--username", help="Username for authentication")
+    parser.add_argument("--email", help="Email for authentication")
     parser.add_argument("--password", help="Password for authentication")
     parser.add_argument("url", help="URL to be processed")
 
     args = parser.parse_args()
 
-    username = args.username
+    username = args.email
     password = args.password
     url = args.url
     show_stuff(username, password, url)

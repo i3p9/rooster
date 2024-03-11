@@ -107,6 +107,7 @@ def get_episode_data_from_api(url):
                 "channel_title": channel_title,
             }
         else:
+            # write-fallback code via yt_dlp
             print("Something went wrong with the API, not my problem.")
 
 
