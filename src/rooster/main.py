@@ -3,7 +3,9 @@ from .downloader import show_stuff
 import argparse
 
 
-def process_links_from_file(username, password, filename, concurrent_fragments):
+def process_links_from_file(
+    username, password, filename, concurrent_fragments, show_mode
+):
     with open(filename, "r") as file:
         links = file.readlines()
         num_links = len(links)
@@ -11,7 +13,9 @@ def process_links_from_file(username, password, filename, concurrent_fragments):
 
         for index, line in enumerate(links, start=1):
             print(f"Downloading link {index} of {num_links}: {line.strip()}")
-            show_stuff(username, password, line.strip(), concurrent_fragments)
+            show_stuff(
+                username, password, line.strip(), concurrent_fragments, show_mode
+            )
 
 
 def main():
