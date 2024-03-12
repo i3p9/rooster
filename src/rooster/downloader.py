@@ -165,7 +165,7 @@ def downloader(username, password, vod_url, episode_data, concurrent_fragments):
     }
 
     ## use aria2c if it exists in system
-    if is_tool("aria2cx"):
+    if is_tool("aria2c"):
         video_options["external_downloader"] = "aria2c"
         video_options["external_downloader_args"] = [
             "-j 16",
@@ -315,6 +315,9 @@ def get_episode_data_from_rt_api(url):
 
 
 def show_stuff(username, password, vod_url, concurrent_fragments):
+    if not is_tool("ffmpeg"):
+        print("ffmpeg not installed, go do that")
+        exit()
     api_url = get_rt_api_url(url=vod_url)
     episode_data = get_episode_data_from_rt_api(api_url)
     if episode_data is False:
