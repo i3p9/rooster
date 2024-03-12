@@ -337,7 +337,7 @@ shows = [
     },
     {
         "id": 211,
-        "title": "Five Nights at Freddy's Songs",
+        "title": "FNAF's Songs",
         "slug": "five-nights-at-freddy-s-songs",
         "uuid": "4f5bccc7-a1c0-437c-89f3-669036fcb89d",
     },
@@ -397,7 +397,7 @@ shows = [
     },
     {
         "id": 318,
-        "title": "Best of Achievement Hunter",
+        "title": "Best of AH",
         "slug": "best-of-achievement-hunter",
         "uuid": "52aa3d87-efe3-4f25-abb8-4879101e4aa4",
     },
@@ -439,7 +439,7 @@ shows = [
     },
     {
         "id": 435,
-        "title": "Every Ninja Turtles Movie Ranked, Reviewed, & Recapped",
+        "title": "Reviewed & Recapped",
         "slug": "every-ninja-turtles-movie-ranked-reviewed-recapped",
         "uuid": "c82e4129-4be7-4727-a291-808872a8b274",
     },
@@ -457,13 +457,13 @@ shows = [
     },
     {
         "id": 477,
-        "title": "Rooster Teeth Celebrates 20 Years of Making Fun",
+        "title": "RT 20 Years of Making",
         "slug": "rooster-teeth-celebrates-20-years-of-making-fun",
         "uuid": "f3ea0d70-1d4d-4731-b80e-7fda55672b95",
     },
     {
         "id": 480,
-        "title": "Red vs. Blue꞉ Restoration",
+        "title": "RvB꞉ Restoration",
         "slug": "red-vs-blue-restoration",
         "uuid": "d96c0a39-b218-445f-a30f-0c8e2f742c5c",
     },
@@ -517,13 +517,13 @@ shows = [
     },
     {
         "id": 336,
-        "title": "Achievement Hunter Stream Archive",
+        "title": "AH Stream Archive",
         "slug": "achievement-hunter-stream-archive",
         "uuid": "8b43513c-e492-4c35-9a4a-335b2f6de875",
     },
     {
         "id": 193,
-        "title": "Rooster Teeth Podcast Post Show",
+        "title": "RT Podcast Post Show",
         "slug": "rooster-teeth-podcast-post-show",
         "uuid": "388ca1c0-a0b4-453b-ba02-b316d67bc780",
     },
@@ -553,7 +553,7 @@ shows = [
     },
     {
         "id": 276,
-        "title": "Every Marvel Cinematic Universe Movie Reviewed & Ranked",
+        "title": "Reviewed & Ranked",
         "slug": "every-marvel-cinematic-universe-movie-reviewed-ranked",
         "uuid": "af4dfaf6-de17-4002-8375-20b24527cf3d",
     },
@@ -577,7 +577,7 @@ shows = [
     },
     {
         "id": 338,
-        "title": "Every DC Extended Universe movie reviewed & ranked",
+        "title": "Reviewed & Ranked",
         "slug": "every-dc-extended-universe-movie-reviewed-ranked",
         "uuid": "6df630eb-5699-4372-a46c-b49c4c96918b",
     },
@@ -613,7 +613,7 @@ shows = [
     },
     {
         "id": 436,
-        "title": "Red vs. Blue Complete",
+        "title": "RvB Complete",
         "slug": "red-vs-blue-complete",
         "uuid": "229eb3b0-22c7-400d-a15f-b19182e56222",
     },
@@ -649,7 +649,7 @@ shows = [
     },
     {
         "id": 205,
-        "title": "Red vs. Blue PSA",
+        "title": "RvB PSA",
         "slug": "red-vs-blue-psa",
         "uuid": "b5233975-f136-4166-b427-78dfacd4b1e6",
     },
@@ -697,13 +697,13 @@ shows = [
     },
     {
         "id": 375,
-        "title": "Every Kevin Smith Movie Reviewed & Ranked",
+        "title": "Reviewed & Ranked",
         "slug": "every-kevin-smith-movie-reviewed-ranked",
         "uuid": "6e50f461-514a-4a0a-965e-f7b647469163",
     },
     {
         "id": 410,
-        "title": "Every Karate Kid Movie Reviewed & Ranked",
+        "title": "Reviewed & Ranked",
         "slug": "every-karate-kid-movie-reviewed-ranked",
         "uuid": "445ca941-2722-4a7b-8a90-b2c1194f8abb",
     },
@@ -727,7 +727,7 @@ shows = [
     },
     {
         "id": 466,
-        "title": "Hardcore Tabletop Presents꞉ The Red Dragon Inn",
+        "title": "Hardcore Tabletop꞉ The Red Dragon Inn",
         "slug": "hardcore-tabletop-presents-the-red-dragon-inn",
         "uuid": "a4bacabe-138e-4b5c-9aa7-c32d7673103c",
     },
@@ -769,7 +769,7 @@ shows = [
     },
     {
         "id": 451,
-        "title": "Achievement Hunter Wrestling",
+        "title": "AH Wrestling",
         "slug": "achievement-hunter-wrestling",
         "uuid": "40c8b339-bb64-4217-955a-b2198558fddc",
     },
@@ -805,7 +805,7 @@ shows = [
     },
     {
         "id": 304,
-        "title": "Every Pixar Movie Reviewed and Ranked",
+        "title": "Reviewed and Ranked",
         "slug": "every-pixar-movie-reviewed-and-ranked",
         "uuid": "a32b6241-c179-4c5f-8116-fcc9bd942fc5",
     },
@@ -829,7 +829,7 @@ shows = [
     },
     {
         "id": 261,
-        "title": "Every Spider-Man Movie Reviewed & Ranked",
+        "title": "Reviewed & Ranked",
         "slug": "every-spider-man-movie-reviewed-ranked",
         "uuid": "1cb69c9e-5224-42ee-a2d2-924b4201d4b8",
     },
@@ -913,13 +913,13 @@ shows = [
     },
     {
         "id": 440,
-        "title": "Red vs. Blue꞉ Family Shatters",
+        "title": "RvB꞉ Family Shatters",
         "slug": "red-vs-blue-family-shatters",
         "uuid": "a9b6de87-622c-43b2-ba49-bdb8e7f4f14a",
     },
     {
         "id": 450,
-        "title": "Black Box Down Aviation Explanation",
+        "title": "BBDown Aviation Explanation",
         "slug": "black-box-down-aviation-explanation",
         "uuid": "64eb2fe1-f0ca-4f8e-b107-e86968d72136",
     },
@@ -961,7 +961,7 @@ shows = [
     },
     {
         "id": 425,
-        "title": "Every Edgar Wright Movie Reviewed & Ranked",
+        "title": "Reviewed & Ranked",
         "slug": "every-edgar-wright-movie-reviewed-ranked",
         "uuid": "ff2ff2b7-7671-4c89-9640-4a49fe58a413",
     },
@@ -1069,7 +1069,7 @@ shows = [
     },
     {
         "id": 391,
-        "title": "Every Conjuring Cinematic Universe Movie Reviewed and Ranked",
+        "title": "Reviewed and Ranked",
         "slug": "every-conjuring-cinematic-universe-movie-reviewed-and-ranked",
         "uuid": "923bf664-5df4-46ec-a2a7-6df8549d7c55",
     },
@@ -1147,7 +1147,7 @@ shows = [
     },
     {
         "id": 426,
-        "title": "Every Monsterverse Movie Ranked & Reviewed",
+        "title": "Reviewed & Ranked",
         "slug": "every-monsterverse-movie-ranked-reviewed",
         "uuid": "49887c0e-7389-41c0-aed1-8f5f24877948",
     },
@@ -1171,7 +1171,7 @@ shows = [
     },
     {
         "id": 424,
-        "title": "Every John Wick Movie Reviewed & Ranked",
+        "title": "Reviewed & Ranked",
         "slug": "every-john-wick-movie-reviewed-ranked",
         "uuid": "da32035d-1bf3-410c-8d93-fd690854e5b7",
     },
@@ -1183,7 +1183,7 @@ shows = [
     },
     {
         "id": 420,
-        "title": "Every Indiana Jones Movie Reviewed & Ranked",
+        "title": "Reviewed & Ranked",
         "slug": "every-indiana-jones-movie-reviewed-ranked",
         "uuid": "af0fabe9-53aa-4ae9-bca3-7671ac2c988d",
     },
@@ -1201,7 +1201,7 @@ shows = [
     },
     {
         "id": 447,
-        "title": "Red vs. Blue꞉ Zero",
+        "title": "RvB꞉ Zero",
         "slug": "zero",
         "uuid": "e0eca9d6-8a55-4719-810e-053efb698c88",
     },
@@ -1219,7 +1219,7 @@ shows = [
     },
     {
         "id": 382,
-        "title": "Every Christopher Nolan Movie Reviewed & Ranked",
+        "title": "Reviewed & Ranked",
         "slug": "every-christopher-nolan-movie-reviewed-ranked",
         "uuid": "b6adca7c-c67c-447a-9b4d-ce57f80bcf0b",
     },
@@ -1261,7 +1261,7 @@ shows = [
     },
     {
         "id": 388,
-        "title": "Every Batman Movie Reviewed and Ranked",
+        "title": "Reviewed and Ranked",
         "slug": "every-batman-movie-reviewed-and-ranked",
         "uuid": "368e238d-6e2d-4703-af6a-269568147bdc",
     },
@@ -1273,7 +1273,7 @@ shows = [
     },
     {
         "id": 383,
-        "title": "Every Studio Ghibli Movie Reviewed and Ranked",
+        "title": "Reviewed and Ranked",
         "slug": "every-studio-ghibli-movie-reviewed-and-ranked",
         "uuid": "5108c608-dd1f-42b6-bdfe-821b31648390",
     },
@@ -1309,7 +1309,7 @@ shows = [
     },
     {
         "id": 372,
-        "title": "Every Lord of the Rings Movie Reviewed & Ranked",
+        "title": "Reviewed & Ranked",
         "slug": "every-lord-of-the-rings-movie-reviewed-ranked",
         "uuid": "4ca2dfbf-4644-49cd-876e-bf0fd6ec5e74",
     },
@@ -1321,7 +1321,7 @@ shows = [
     },
     {
         "id": 373,
-        "title": "Every Star Trek Movie Reviewed & Ranked",
+        "title": "Reviewed & Ranked",
         "slug": "every-star-trek-movie-reviewed-ranked",
         "uuid": "4ad94232-96b1-4eb5-be67-3fedf1f54aed",
     },
@@ -1333,7 +1333,7 @@ shows = [
     },
     {
         "id": 370,
-        "title": "Every Transformers Movie Reviewed & Ranked",
+        "title": "Reviewed & Ranked",
         "slug": "every-transformers-movie-reviewed-ranked",
         "uuid": "4d2678c9-6c26-4b17-8b08-451f150ed46e",
     },
@@ -1519,7 +1519,7 @@ shows = [
     },
     {
         "id": 310,
-        "title": "Every Harry Potter Movie Reviewed & Ranked",
+        "title": "Reviewed & Ranked",
         "slug": "every-harry-potter-movie-reviewed-ranked",
         "uuid": "5552369d-9539-46a7-b2bd-f29bf9a39b14",
     },
@@ -1585,7 +1585,7 @@ shows = [
     },
     {
         "id": 270,
-        "title": "Every Fast and Furious Movie Reviewed & Ranked",
+        "title": "Reviewed & Ranked",
         "slug": "every-fast-and-furious-movie-reviewed-ranked",
         "uuid": "1d50f495-eed2-4b58-9019-dd2960363dc0",
     },
@@ -1597,7 +1597,7 @@ shows = [
     },
     {
         "id": 266,
-        "title": "Every X-Men Movie Reviewed & Ranked",
+        "title": "Reviewed & Ranked",
         "slug": "every-x-men-movie-reviewed-ranked",
         "uuid": "93525413-6b31-459e-a0c3-67d30b7ba814",
     },
@@ -1633,7 +1633,7 @@ shows = [
     },
     {
         "id": 446,
-        "title": "Red vs. Blue꞉ The Shisno Trilogy",
+        "title": "RvB꞉ The Shisno Trilogy",
         "slug": "the-shisno-trilogy",
         "uuid": "74380adc-64e7-4a4b-8461-cf295ff3ce77",
     },
@@ -1645,7 +1645,7 @@ shows = [
     },
     {
         "id": 297,
-        "title": "Game of Thrones Final Season In Review",
+        "title": "GoT Final Season In Review",
         "slug": "game-of-thrones-final-season-in-review",
         "uuid": "99557ab6-fa3c-4042-9171-8eb74aadeafa",
     },
@@ -1681,7 +1681,7 @@ shows = [
     },
     {
         "id": 287,
-        "title": "Every Mission꞉ Impossible movie reviewed & ranked",
+        "title": "Reviewed & Ranked",
         "slug": "every-mission-impossible-movie-reviewed-ranked",
         "uuid": "1b897cc0-6fcd-4bdf-87ae-c509628972c3",
     },
@@ -1759,7 +1759,7 @@ shows = [
     },
     {
         "id": 282,
-        "title": "Cheap Game ⧸ Cheap Life",
+        "title": "Cheap Game ∕ Cheap Life",
         "slug": "cheap-game-cheap-life",
         "uuid": "04d93acf-f564-4c53-8f81-f6e81d184d79",
     },
@@ -1873,7 +1873,7 @@ shows = [
     },
     {
         "id": 238,
-        "title": "The Bungalow꞉ The Business of Rooster Teeth",
+        "title": "The Bungalow꞉ The Business of RT",
         "slug": "the-bungalow",
         "uuid": "dcbf38d6-5f06-4c66-ad70-9a2d9108c145",
     },
@@ -1963,7 +1963,7 @@ shows = [
     },
     {
         "id": 443,
-        "title": "Red vs. Blue꞉ Project Freelancer Saga",
+        "title": "RvB꞉ Project Freelancer Saga",
         "slug": "project-freelancer-saga",
         "uuid": "d7f8cb9d-8aa9-4ff9-a119-d34662d91851",
     },
@@ -2155,7 +2155,7 @@ shows = [
     },
     {
         "id": 445,
-        "title": "Red vs. Blue꞉ Anthology",
+        "title": "RvB꞉ Anthology",
         "slug": "anthology",
         "uuid": "fbc8581b-67cc-4221-90c5-2f783b111d92",
     },
@@ -2323,7 +2323,7 @@ shows = [
     },
     {
         "id": 72,
-        "title": "FAQ Podcast [Funhaus Answers Questions]",
+        "title": "FAQ Podcast",
         "slug": "faq-podcast-funhaus-answers-questions",
         "uuid": "ff92f9bc-464d-11e7-a302-065410f210c4",
     },
@@ -2335,7 +2335,7 @@ shows = [
     },
     {
         "id": 444,
-        "title": "Red vs. Blue꞉ The Chorus Trilogy",
+        "title": "RvB꞉ The Chorus Trilogy",
         "slug": "the-chorus-trilogy",
         "uuid": "07636fec-32f1-4b45-ac81-54248fd5ad2d",
     },
@@ -2497,7 +2497,7 @@ shows = [
     },
     {
         "id": 442,
-        "title": "Red vs. Blue꞉ The Recollection",
+        "title": "RvB꞉ The Recollection",
         "slug": "the-recollection",
         "uuid": "a74226fc-edcb-489e-9487-95a32ed7ed58",
     },
@@ -2521,7 +2521,7 @@ shows = [
     },
     {
         "id": 441,
-        "title": "Red vs. Blue꞉ Blood Gulch Chronicles",
+        "title": "RvB꞉ Blood Gulch Chronicles",
         "slug": "blood-gulch-chronicles",
         "uuid": "04b34e06-bd45-4392-80f4-bd9c5b6ae50a",
     },
