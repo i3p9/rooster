@@ -24,6 +24,12 @@ def get_high_quality_thumbnail_link(images):
     return False
 
 
+def get_archive_log_filename():
+    script_location = os.getcwd()
+    archive_log_location = os.path.join(script_location, "archive.log")
+    return archive_log_location
+
+
 def get_download_location():
     script_location = os.getcwd()
     download_location = os.path.join(
@@ -164,6 +170,7 @@ def downloader(
         "merge_output_format": "mp4",
         "retries": 10,
         "fragment_retries": 10,
+        "download_archive": get_archive_log_filename(),
         # "progress_hooks": [ydl_progress_hook],
     }
     extractor_options = {
