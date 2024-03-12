@@ -9,6 +9,21 @@ from .channels import get_channel_name_from_id
 from .shows import get_show_name_from_id
 
 
+def get_high_quality_thumbnail_link(images):
+    for image in images:
+        image_type = image.get("type", "")
+        if (
+            image_type.lower() == "episode_image"
+            or image_type.lower() == "bonus_feature_image"
+        ):
+            attributes = image.get("attributes", {})
+            if attributes.get("image_type", "").lower() == "profile":
+                image_url = attributes.get("large", "")
+                if image_url:
+                    return image_url
+    return False
+
+
 def get_download_location():
     script_location = os.getcwd()
     download_location = os.path.join(
@@ -155,6 +170,7 @@ def downloader(username, password, vod_url, episode_data, concurrent_fragments):
     print("Starting download: ", full_name_with_dir)
     try:
         yt_dlp.YoutubeDL(video_options).download(vod_url)
+        append_to_csv(vod_url)
     except:
         logging.warning("Error with yt_dlp downloading")
     # TODO: Append only when done
@@ -183,15 +199,22 @@ def get_episode_data_from_api(url):
         if episode_data:
             episode_obj = episode_data[0]
             episode_id = episode_obj.get("id")
-
+            uuid = episode_obj.get("uuid")
             episode_type = episode_obj.get("type")
             attributes = episode_obj.get("attributes", {})
             display_title = make_filename_safe(attributes.get("display_title"))
             channel_id = attributes.get("channel_id")
+            season_id = attributes.get("season_id")
             original_air_date_full = attributes.get("original_air_date", "")
             is_first_content = attributes.get("is_sponsors_only")
-            show_id = show_title = attributes.get("show_id")
+            show_id = attributes.get("show_id")
+            parent_slug = attributes.get("parent_content_slug", "")
             show_title = make_filename_safe(get_show_name_from_id(show_id))
+            print(show_id)
+            if season_id:
+                large_thumb = f"https://cdn.ffaisal.com/thumbnail/{show_id}/{season_id}/{uuid}.jpg"
+            else:
+                large_thumb = f"https://cdn.ffaisal.com/thumbnail/{show_id}/bonus-content-{parent_slug}/{uuid}.jpg"
 
             original_air_date = (
                 original_air_date_full.split("T")[0]
@@ -207,6 +230,7 @@ def get_episode_data_from_api(url):
                 "show_title": show_title,
                 "is_first_content": is_first_content,
                 "channel_title": channel_title,
+                "large_thumb": large_thumb,
             }
         else:
             # write-fallback code via ytdlp info dict
@@ -220,6 +244,8 @@ def get_episode_data_from_rt_api(url):
         if episode_data:
             episode_obj = episode_data[0]
             episode_id = episode_obj.get("id")
+            images = episode_obj.get("included", {}).get("images", [])
+            large_thumb = get_high_quality_thumbnail_link(images)
 
             episode_type = episode_obj.get("type")
             attributes = episode_obj.get("attributes", {})
@@ -244,6 +270,7 @@ def get_episode_data_from_rt_api(url):
                 "show_title": show_title,
                 "is_first_content": is_first_content,
                 "channel_title": channel_title,
+                "large_thumb": large_thumb,
             }
         else:
             # write-fallback code via my api
@@ -252,7 +279,8 @@ def get_episode_data_from_rt_api(url):
 
 def show_stuff(username, password, vod_url, concurrent_fragments):
     api_url = get_rt_api_url(url=vod_url)
-    episode_data = get_episode_data_from_rt_api(api_url)
+    # episode_data = get_episode_data_from_rt_api(api_url)
+    episode_data = False
     if episode_data is False:
         episode_data = get_episode_data_from_api(vod_url)
     downloader(username, password, vod_url, episode_data, concurrent_fragments)
