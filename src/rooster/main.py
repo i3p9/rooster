@@ -25,6 +25,7 @@ def main():
         type=int,
         help="Number of concurrent fragments (default is 10)",
     )
+    parser.add_argument("--show", action="store_true", help="Flag to show something")
 
     parser.add_argument("input", help="URL or file containing list of links")
 
@@ -34,10 +35,19 @@ def main():
     password = args.password
     input_value = args.input
     concurrent_fragments = args.concurrent_fragments
-    if input_value.endswith(".txt"):
-        process_links_from_file(username, password, input_value, concurrent_fragments)
+    show_flag = args.show
+
+    if show_flag:
+        show_mode = True
     else:
-        show_stuff(username, password, input_value, concurrent_fragments)
+        show_mode = False
+
+    if input_value.endswith(".txt"):
+        process_links_from_file(
+            username, password, input_value, concurrent_fragments, show_mode
+        )
+    else:
+        show_stuff(username, password, input_value, concurrent_fragments, show_mode)
 
 
 if __name__ == "__main__":

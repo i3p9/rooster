@@ -145,7 +145,9 @@ def download_thumbnail(thumbnail_url, episode_data):
         print(f"Failed to download thumbnail from: {thumbnail_url}")
 
 
-def downloader(username, password, vod_url, episode_data, concurrent_fragments):
+def downloader(
+    username, password, vod_url, episode_data, concurrent_fragments, show_mode
+):
     video_options = {
         "username": username,
         "password": password,
@@ -201,7 +203,19 @@ def downloader(username, password, vod_url, episode_data, concurrent_fragments):
         download_thumbnail(yt_dlp_dict_data["large_thumbnail_url_ytdl"], episode_data)
 
     name_with_extension = file_name + "/" + file_name + ".%(ext)s"
-    full_name_with_dir = os.path.join(dl_location, name_with_extension)
+
+    # if we are in show mode, episode folder will be inside a show folder
+    if show_mode is True:
+        if episode_data is not False:
+            full_name_with_dir = os.path.join(
+                dl_location, episode_data["show_title"], name_with_extension
+            )
+        else:
+            logging.warning("show mode True but has Fallback data")
+            full_name_with_dir = os.path.join(dl_location, name_with_extension)
+    else:
+        full_name_with_dir = os.path.join(dl_location, name_with_extension)
+
     video_options["outtmpl"] = full_name_with_dir
 
     # pass off to yt-dlp for downloading
@@ -314,7 +328,7 @@ def get_episode_data_from_rt_api(url):
             return False
 
 
-def show_stuff(username, password, vod_url, concurrent_fragments):
+def show_stuff(username, password, vod_url, concurrent_fragments, show_mode):
     if not is_tool("ffmpeg"):
         print("ffmpeg not installed, go do that")
         exit()
@@ -322,4 +336,6 @@ def show_stuff(username, password, vod_url, concurrent_fragments):
     episode_data = get_episode_data_from_rt_api(api_url)
     if episode_data is False:
         episode_data = get_episode_data_from_api(vod_url)
-    downloader(username, password, vod_url, episode_data, concurrent_fragments)
+    downloader(
+        username, password, vod_url, episode_data, concurrent_fragments, show_mode
+    )
