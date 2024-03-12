@@ -1,7 +1,7 @@
 shows = [
     {
         "id": 482,
-        "title": "F**KFACE Break Show",
+        "title": "F＊＊KFACE Break Show",
         "slug": "f-kface-break-show",
         "uuid": "58ebd3c1-1477-45fb-bd54-b3a7d0288f79",
     },
@@ -43,7 +43,7 @@ shows = [
     },
     {
         "id": 369,
-        "title": "F**KFACE",
+        "title": "F＊＊KFACE",
         "slug": "f-kface",
         "uuid": "a1e355c7-2d86-4a62-a7ab-240bdae40b04",
     },
@@ -103,7 +103,7 @@ shows = [
     },
     {
         "id": 467,
-        "title": "Does it Do?",
+        "title": "Does it Do？",
         "slug": "does-it-do",
         "uuid": "e18398ed-4103-4f9a-893a-d13020d09321",
     },
@@ -157,7 +157,7 @@ shows = [
     },
     {
         "id": 506,
-        "title": "Red Web: Book Club",
+        "title": "Red Web꞉ Book Club",
         "slug": "red-web-book-club",
         "uuid": "ea950782-efdc-4a7c-968f-3163a5d030ce",
     },
@@ -217,7 +217,7 @@ shows = [
     },
     {
         "id": 469,
-        "title": "Red Web: Case Files",
+        "title": "Red Web꞉ Case Files",
         "slug": "red-web-case-files",
         "uuid": "1ac89a05-41a3-4652-8287-9bdcb4f00cf2",
     },
@@ -301,7 +301,7 @@ shows = [
     },
     {
         "id": 496,
-        "title": "F**kface Off",
+        "title": "F＊＊kface Off",
         "slug": "f-kface-off",
         "uuid": "46910f45-2161-4936-997f-5cd438fd8e89",
     },
@@ -385,7 +385,7 @@ shows = [
     },
     {
         "id": 197,
-        "title": "Off Topic: Last Call",
+        "title": "Off Topic꞉ Last Call",
         "slug": "last-call",
         "uuid": "b858307c-bbdc-47ca-81d8-9193338841f6",
     },
@@ -415,7 +415,7 @@ shows = [
     },
     {
         "id": 478,
-        "title": "How Hard Could it Be?",
+        "title": "How Hard Could it Be？",
         "slug": "how-hard-could-it-be",
         "uuid": "ad5daaaf-d1e6-4824-a55b-6292e9f6e0ac",
     },
@@ -463,7 +463,7 @@ shows = [
     },
     {
         "id": 480,
-        "title": "Red vs. Blue: Restoration",
+        "title": "Red vs. Blue꞉ Restoration",
         "slug": "red-vs-blue-restoration",
         "uuid": "d96c0a39-b218-445f-a30f-0c8e2f742c5c",
     },
@@ -547,7 +547,7 @@ shows = [
     },
     {
         "id": 470,
-        "title": "F**KFACE Regulation Animation",
+        "title": "F＊＊KFACE Regulation Animation",
         "slug": "f-kface-regulation-animation",
         "uuid": "9f00b7f1-6a6a-4317-a160-70153035dece",
     },
@@ -625,7 +625,7 @@ shows = [
     },
     {
         "id": 465,
-        "title": "RWBY: Ice Queendom",
+        "title": "RWBY꞉ Ice Queendom",
         "slug": "rwby-ice-queendom",
         "uuid": "e84fd69a-2b42-45f4-ae49-d63f81ed5b86",
     },
@@ -691,7 +691,7 @@ shows = [
     },
     {
         "id": 468,
-        "title": "UNO: Infinite",
+        "title": "UNO꞉ Infinite",
         "slug": "uno-infinite",
         "uuid": "3d8645ad-7bd1-46bc-bd44-48f46fb0acb4",
     },
@@ -727,7 +727,7 @@ shows = [
     },
     {
         "id": 466,
-        "title": "Hardcore Tabletop Presents: The Red Dragon Inn",
+        "title": "Hardcore Tabletop Presents꞉ The Red Dragon Inn",
         "slug": "hardcore-tabletop-presents-the-red-dragon-inn",
         "uuid": "a4bacabe-138e-4b5c-9aa7-c32d7673103c",
     },
@@ -853,7 +853,7 @@ shows = [
     },
     {
         "id": 233,
-        "title": "gen:LOCK",
+        "title": "gen꞉LOCK",
         "slug": "gen-lock",
         "uuid": "79340471-4d4f-41f8-a463-e18ddf1f4053",
     },
@@ -913,7 +913,7 @@ shows = [
     },
     {
         "id": 440,
-        "title": "Red vs. Blue: Family Shatters",
+        "title": "Red vs. Blue꞉ Family Shatters",
         "slug": "red-vs-blue-family-shatters",
         "uuid": "a9b6de87-622c-43b2-ba49-bdb8e7f4f14a",
     },
@@ -925,7 +925,7 @@ shows = [
     },
     {
         "id": 449,
-        "title": "un:LOCKED",
+        "title": "un꞉LOCKED",
         "slug": "un-locked",
         "uuid": "2415d418-7544-4fa5-944d-8ef87ac46398",
     },
@@ -943,7 +943,7 @@ shows = [
     },
     {
         "id": 448,
-        "title": "RWBY: Fairy Tales",
+        "title": "RWBY꞉ Fairy Tales",
         "slug": "rwby-fairy-tales",
         "uuid": "f3ba5677-f25f-4f71-b28f-8fce5e46b16c",
     },
@@ -991,7 +991,7 @@ shows = [
     },
     {
         "id": 331,
-        "title": "CHUMP: Chump Change",
+        "title": "CHUMP꞉ Chump Change",
         "slug": "chump-post-show",
         "uuid": "f0d341c4-92a0-4471-9c7d-c8cf4b894945",
     },
@@ -1039,7 +1039,7 @@ shows = [
     },
     {
         "id": 387,
-        "title": "RWBY: The Grimm Campaign",
+        "title": "RWBY꞉ The Grimm Campaign",
         "slug": "rwby-the-grimm-campaign",
         "uuid": "d5688e13-3f01-47b2-b762-c176a5ccd397",
     },
@@ -1123,7 +1123,7 @@ shows = [
     },
     {
         "id": 200,
-        "title": "Death Battle Cast: Sudden Death",
+        "title": "Death Battle Cast꞉ Sudden Death",
         "slug": "sudden-death",
         "uuid": "de88a4bf-a657-4f58-ac88-2d909230df52",
     },
@@ -1201,7 +1201,7 @@ shows = [
     },
     {
         "id": 447,
-        "title": "Red vs. Blue: Zero",
+        "title": "Red vs. Blue꞉ Zero",
         "slug": "zero",
         "uuid": "e0eca9d6-8a55-4719-810e-053efb698c88",
     },
@@ -1255,7 +1255,7 @@ shows = [
     },
     {
         "id": 365,
-        "title": "High Rollers: Aerois",
+        "title": "High Rollers꞉ Aerois",
         "slug": "high-rollers-aerois",
         "uuid": "9e1ba248-e268-47e7-9092-1b4cf4962d57",
     },
@@ -1339,7 +1339,7 @@ shows = [
     },
     {
         "id": 191,
-        "title": "Always Open: Still Open",
+        "title": "Always Open꞉ Still Open",
         "slug": "still-open",
         "uuid": "c10b3ad0-358d-4e3a-a307-0855a211fb01",
     },
@@ -1393,7 +1393,7 @@ shows = [
     },
     {
         "id": 263,
-        "title": "Kinda Funny: The Animated Series",
+        "title": "Kinda Funny꞉ The Animated Series",
         "slug": "kinda-funny-the-animated-series",
         "uuid": "2a6622cd-2f8f-468e-811d-3467ad1fc9e7",
     },
@@ -1513,7 +1513,7 @@ shows = [
     },
     {
         "id": 194,
-        "title": "On the Spot: For The Win",
+        "title": "On the Spot꞉ For The Win",
         "slug": "for-the-win",
         "uuid": "a1c70f51-26bc-458a-82cc-98095cf0de4a",
     },
@@ -1603,7 +1603,7 @@ shows = [
     },
     {
         "id": 302,
-        "title": "Murder Room: After The Verdict",
+        "title": "Murder Room꞉ After The Verdict",
         "slug": "murder-room-after-the-verdict",
         "uuid": "8d6eac68-cdcc-417a-93da-48c978fe9c15",
     },
@@ -1633,7 +1633,7 @@ shows = [
     },
     {
         "id": 446,
-        "title": "Red vs. Blue: The Shisno Trilogy",
+        "title": "Red vs. Blue꞉ The Shisno Trilogy",
         "slug": "the-shisno-trilogy",
         "uuid": "74380adc-64e7-4a4b-8461-cf295ff3ce77",
     },
@@ -1675,13 +1675,13 @@ shows = [
     },
     {
         "id": 295,
-        "title": "Halo 4: Forward Unto Dawn",
+        "title": "Halo 4꞉ Forward Unto Dawn",
         "slug": "halo-4-forward-unto-dawn",
         "uuid": "946b73c2-d30c-462c-9de5-cbbcfcc27ce7",
     },
     {
         "id": 287,
-        "title": "Every Mission: Impossible movie reviewed & ranked",
+        "title": "Every Mission꞉ Impossible movie reviewed & ranked",
         "slug": "every-mission-impossible-movie-reviewed-ranked",
         "uuid": "1b897cc0-6fcd-4bdf-87ae-c509628972c3",
     },
@@ -1759,7 +1759,7 @@ shows = [
     },
     {
         "id": 282,
-        "title": "Cheap Game / Cheap Life",
+        "title": "Cheap Game ⧸ Cheap Life",
         "slug": "cheap-game-cheap-life",
         "uuid": "04d93acf-f564-4c53-8f81-f6e81d184d79",
     },
@@ -1801,13 +1801,13 @@ shows = [
     },
     {
         "id": 196,
-        "title": "Glitch Please: New Game +",
+        "title": "Glitch Please꞉ New Game +",
         "slug": "new-game",
         "uuid": "ec0d04f8-a0f2-4e00-9118-1d77f91598ac",
     },
     {
         "id": 183,
-        "title": "CRWBY: Behind the Episode",
+        "title": "CRWBY꞉ Behind the Episode",
         "slug": "c-r-w-b-y-behind-the-episode",
         "uuid": "53bd1195-36fe-4286-b1d1-1693b81623c8",
     },
@@ -1831,7 +1831,7 @@ shows = [
     },
     {
         "id": 101,
-        "title": "ScrewAttack Presents: Top 10",
+        "title": "ScrewAttack Presents꞉ Top 10",
         "slug": "top-10s",
         "uuid": "ff933d50-464d-11e7-a302-065410f210c4",
     },
@@ -1873,7 +1873,7 @@ shows = [
     },
     {
         "id": 238,
-        "title": "The Bungalow: The Business of Rooster Teeth",
+        "title": "The Bungalow꞉ The Business of Rooster Teeth",
         "slug": "the-bungalow",
         "uuid": "dcbf38d6-5f06-4c66-ad70-9a2d9108c145",
     },
@@ -1963,7 +1963,7 @@ shows = [
     },
     {
         "id": 443,
-        "title": "Red vs. Blue: Project Freelancer Saga",
+        "title": "Red vs. Blue꞉ Project Freelancer Saga",
         "slug": "project-freelancer-saga",
         "uuid": "d7f8cb9d-8aa9-4ff9-a119-d34662d91851",
     },
@@ -1999,7 +1999,7 @@ shows = [
     },
     {
         "id": 180,
-        "title": "Twits and Crits: The League of Extraordinary Jiremen",
+        "title": "Twits and Crits꞉ The League of Extraordinary Jiremen",
         "slug": "the-league-of-extraordinary-jiremen",
         "uuid": "989e956c-8ab5-4f0d-bc01-d7f364bd1f44",
     },
@@ -2053,7 +2053,7 @@ shows = [
     },
     {
         "id": 202,
-        "title": "Tuesday Night Game Fight: Post Fight Battle",
+        "title": "Tuesday Night Game Fight꞉ Post Fight Battle",
         "slug": "post-fight-battle",
         "uuid": "1e86f75c-2ef2-4993-9bac-7fd752de40fd",
     },
@@ -2089,7 +2089,7 @@ shows = [
     },
     {
         "id": 169,
-        "title": "Let's Play Live: Life on Tour",
+        "title": "Let's Play Live꞉ Life on Tour",
         "slug": "let-s-play-live-life-on-tour",
         "uuid": "ff9413ea-464d-11e7-a302-065410f210c4",
     },
@@ -2107,7 +2107,7 @@ shows = [
     },
     {
         "id": 203,
-        "title": "Enjoy the Show: After The Credits",
+        "title": "Enjoy the Show꞉ After The Credits",
         "slug": "after-the-credits",
         "uuid": "4987698b-28b9-42b6-bd86-e708ac4017ff",
     },
@@ -2137,7 +2137,7 @@ shows = [
     },
     {
         "id": 390,
-        "title": "RWBY: World of Remnant",
+        "title": "RWBY꞉ World of Remnant",
         "slug": "world-of-remnant",
         "uuid": "de8fcd50-bffa-40aa-9be2-34366b6f1740",
     },
@@ -2155,7 +2155,7 @@ shows = [
     },
     {
         "id": 445,
-        "title": "Red vs. Blue: Anthology",
+        "title": "Red vs. Blue꞉ Anthology",
         "slug": "anthology",
         "uuid": "fbc8581b-67cc-4221-90c5-2f783b111d92",
     },
@@ -2335,7 +2335,7 @@ shows = [
     },
     {
         "id": 444,
-        "title": "Red vs. Blue: The Chorus Trilogy",
+        "title": "Red vs. Blue꞉ The Chorus Trilogy",
         "slug": "the-chorus-trilogy",
         "uuid": "07636fec-32f1-4b45-ac81-54248fd5ad2d",
     },
@@ -2497,7 +2497,7 @@ shows = [
     },
     {
         "id": 442,
-        "title": "Red vs. Blue: The Recollection",
+        "title": "Red vs. Blue꞉ The Recollection",
         "slug": "the-recollection",
         "uuid": "a74226fc-edcb-489e-9487-95a32ed7ed58",
     },
@@ -2521,7 +2521,7 @@ shows = [
     },
     {
         "id": 441,
-        "title": "Red vs. Blue: Blood Gulch Chronicles",
+        "title": "Red vs. Blue꞉ Blood Gulch Chronicles",
         "slug": "blood-gulch-chronicles",
         "uuid": "04b34e06-bd45-4392-80f4-bd9c5b6ae50a",
     },

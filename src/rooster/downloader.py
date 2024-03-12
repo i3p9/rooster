@@ -1,9 +1,27 @@
 import os
+import re
 from urllib.parse import urlparse
 import requests
 import yt_dlp
 from .channels import get_channel_name_from_id
 from .shows import get_show_name_from_id
+
+
+def make_filename_safe(input_string):
+    char_mappings = {
+        "/": "∕",
+        "*": "＊",
+        "?": "？",
+        '"': "“",
+        "<": "＜",
+        ">": "＞",
+        "|": "⏐",
+    }
+    safe_string = input_string
+    for char, replacement in char_mappings.items():
+        safe_string = safe_string.replace(char, replacement)
+
+    return safe_string
 
 
 def is_tool(name):
@@ -53,6 +71,10 @@ def downloader(username, password, vod_url, episode_data):
     else:
         print("aria2c not found, skipping.")
 
+    if episode_data is False:
+        print("Use yt-dlp's output")
+        # todo
+
     file_name = generate_file_name(episode_data)
     dl_location = get_download_location()
 
@@ -83,19 +105,19 @@ def get_episode_data_from_api(url):
 
             episode_type = episode_obj.get("type")
             attributes = episode_obj.get("attributes", {})
-            display_title = attributes.get("display_title")
+            display_title = make_filename_safe(attributes.get("display_title"))
             channel_id = attributes.get("channel_id")
             original_air_date_full = attributes.get("original_air_date", "")
             is_first_content = attributes.get("is_sponsors_only")
             show_id = show_title = attributes.get("show_id")
-            show_title = get_show_name_from_id(show_id)
+            show_title = make_filename_safe(get_show_name_from_id(show_id))
 
             original_air_date = (
                 original_air_date_full.split("T")[0]
                 if "T" in original_air_date_full
                 else None
             )
-            channel_title = get_channel_name_from_id(channel_id)
+            channel_title = make_filename_safe(get_channel_name_from_id(channel_id))
 
             # Return or use the extracted values as needed
             return {
@@ -108,6 +130,7 @@ def get_episode_data_from_api(url):
             }
         else:
             # write-fallback code via yt_dlp
+            return False
             print("Something went wrong with the API, not my problem.")
 
 
