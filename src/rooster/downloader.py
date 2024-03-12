@@ -85,6 +85,7 @@ def append_to_csv(url, csv_filename="download_history.csv"):
 
 def make_filename_safe(input_string):
     char_mappings = {
+        ":": "꞉",
         "/": "∕",
         "*": "＊",
         "?": "？",
@@ -207,7 +208,7 @@ def downloader(username, password, vod_url, episode_data, concurrent_fragments):
     print("Starting download: ", full_name_with_dir)
     try:
         yt_dlp.YoutubeDL(video_options).download(vod_url)
-        append_to_csv(vod_url)
+        # append_to_csv(vod_url)
     except:
         logging.warning("Error with yt_dlp downloading")
     # TODO: Append only when done
