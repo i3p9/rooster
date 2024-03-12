@@ -52,12 +52,19 @@ def extract_data_from_ytdl_dict(info_dict):
     channel_id = info_dict["channel_id"]
     is_first_content = False if info_dict["availability"] == "public" else True
     channe_title = get_channel_name_from_id(channel_id)
+    large_thumbnail_url_ytdl = None
+
+    for thumbnail in info_dict["thumbnails"]:
+        if thumbnail["id"] == "large":
+            large_thumbnail_url_ytdl = thumbnail["url"]
+            break
 
     return {
         "id_numerical": episode_id,
         "display_title": episode_title,
         "channe_title": channe_title,
         "is_first_content": is_first_content,
+        "large_thumbnail_url_ytdl": large_thumbnail_url_ytdl,
     }
 
 
@@ -108,6 +115,35 @@ def generate_basic_file_name(data):
     return f"{data['channel_title']} {data['display_title']} [{data['id_numerical']}]"
 
 
+def download_thumbnail(thumbnail_url, episode_data):
+    # Ensure the download location exists
+    dl_location = get_download_location()
+    os.makedirs(dl_location, exist_ok=True)
+
+    # Generate the file name and create the directory
+    file_name = generate_file_name(episode_data)
+    file_directory = os.path.join(dl_location, file_name)
+    os.makedirs(file_directory, exist_ok=True)
+
+    if thumbnail_url is not None:  # from yt-dlp data
+        file_extension = os.path.splitext(thumbnail_url)[1]
+    else:  # from api data
+        logging.warning("Downloading thumbnail using fallback method")
+        thumbnail_url = episode_data["large_thumb"]
+        file_extension = os.path.splitext(thumbnail_url)[1]
+
+    file_path = os.path.join(file_directory, f"{file_name}{file_extension}")
+
+    # Attempt to download
+    response = requests.get(thumbnail_url)
+    if response.status_code == 200:
+        with open(file_path, "wb") as f:
+            f.write(response.content)
+        print(f"Large Thumbnail downloaded to: {file_path}")
+    else:
+        print(f"Failed to download thumbnail from: {thumbnail_url}")
+
+
 def downloader(username, password, vod_url, episode_data, concurrent_fragments):
     video_options = {
         "username": username,
@@ -115,7 +151,7 @@ def downloader(username, password, vod_url, episode_data, concurrent_fragments):
         "forcejson": False,
         "writeinfojson": True,
         "writedescription": True,
-        "writethumbnail": True,
+        # "writethumbnail": True,
         "nooverwrites": True,
         "merge_output_format": "mp4",
         "retries": 10,
@@ -161,6 +197,7 @@ def downloader(username, password, vod_url, episode_data, concurrent_fragments):
     else:
         file_name = generate_file_name(episode_data)
         dl_location = get_download_location()
+        download_thumbnail(yt_dlp_dict_data["large_thumbnail_url_ytdl"], episode_data)
 
     name_with_extension = file_name + "/" + file_name + ".%(ext)s"
     full_name_with_dir = os.path.join(dl_location, name_with_extension)
@@ -210,7 +247,6 @@ def get_episode_data_from_api(url):
             show_id = attributes.get("show_id")
             parent_slug = attributes.get("parent_content_slug", "")
             show_title = make_filename_safe(get_show_name_from_id(show_id))
-            print(show_id)
             if season_id:
                 large_thumb = f"https://cdn.ffaisal.com/thumbnail/{show_id}/{season_id}/{uuid}.jpg"
             else:
@@ -273,14 +309,13 @@ def get_episode_data_from_rt_api(url):
                 "large_thumb": large_thumb,
             }
         else:
-            # write-fallback code via my api
+            # go to fallback data fetch via my api
             return False
 
 
 def show_stuff(username, password, vod_url, concurrent_fragments):
     api_url = get_rt_api_url(url=vod_url)
-    # episode_data = get_episode_data_from_rt_api(api_url)
-    episode_data = False
+    episode_data = get_episode_data_from_rt_api(api_url)
     if episode_data is False:
         episode_data = get_episode_data_from_api(vod_url)
     downloader(username, password, vod_url, episode_data, concurrent_fragments)
