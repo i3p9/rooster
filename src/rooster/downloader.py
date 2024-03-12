@@ -116,14 +116,19 @@ def generate_basic_file_name(data):
     return f"{data['channel_title']} {data['display_title']} [{data['id_numerical']}]"
 
 
-def download_thumbnail(thumbnail_url, episode_data):
+def download_thumbnail(thumbnail_url, episode_data, show_mode):
     # Ensure the download location exists
     dl_location = get_download_location()
     os.makedirs(dl_location, exist_ok=True)
 
     # Generate the file name and create the directory
     file_name = generate_file_name(episode_data)
-    file_directory = os.path.join(dl_location, file_name)
+    if show_mode is True:
+        file_directory = os.path.join(
+            dl_location, episode_data["show_title"], file_name
+        )
+    else:
+        file_directory = os.path.join(dl_location, file_name)
     os.makedirs(file_directory, exist_ok=True)
 
     if thumbnail_url is not None:  # from yt-dlp data
@@ -200,7 +205,9 @@ def downloader(
     else:
         file_name = generate_file_name(episode_data)
         dl_location = get_download_location()
-        download_thumbnail(yt_dlp_dict_data["large_thumbnail_url_ytdl"], episode_data)
+        download_thumbnail(
+            yt_dlp_dict_data["large_thumbnail_url_ytdl"], episode_data, show_mode
+        )
 
     name_with_extension = file_name + "/" + file_name + ".%(ext)s"
 
