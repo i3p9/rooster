@@ -7,6 +7,8 @@ import requests
 import yt_dlp
 from .channels import get_channel_name_from_id
 from .shows import get_show_name_from_id
+from urllib3.exceptions import MaxRetryError, NewConnectionError
+from requests.adapters import HTTPAdapter
 
 
 def get_high_quality_thumbnail_link(images):
@@ -122,6 +124,39 @@ def generate_basic_file_name(data):
     return f"{data['channel_title']} {data['display_title']} [{data['id_numerical']}]"
 
 
+def download_thumbnail_fallback(episode_data):
+    # Ensure the download location exists
+    dl_location = get_download_location()
+    os.makedirs(dl_location, exist_ok=True)
+
+    # Generate the file name and create the directory
+    file_name = generate_file_name(episode_data)
+    file_directory = os.path.join(dl_location, episode_data["show_title"], file_name)
+    thumbnail_url = episode_data["large_thumb_alt"]
+    file_extension = os.path.splitext(thumbnail_url)[1]
+
+    file_path = os.path.join(file_directory, f"{file_name}{file_extension}")
+
+    # Attempt to download
+    s = requests.Session()
+    s.mount(thumbnail_url, HTTPAdapter(max_retries=5))
+
+    try:
+        response = s.get(thumbnail_url)
+        if response.status_code == 200:
+            with open(file_path, "wb") as f:
+                f.write(response.content)
+            print(f"Large Thumbnail downloaded to: {file_path}")
+            return True
+        else:
+            print(f"Failed to download thumbnail from: {thumbnail_url}")
+    except Exception as e:
+        print(
+            f"An error occurred: {e}. Please note this episodeId: {episode_data['id_numerical']}"
+        )
+    return False
+
+
 def download_thumbnail(thumbnail_url, episode_data, show_mode):
     # Ensure the download location exists
     dl_location = get_download_location()
@@ -147,13 +182,38 @@ def download_thumbnail(thumbnail_url, episode_data, show_mode):
     file_path = os.path.join(file_directory, f"{file_name}{file_extension}")
 
     # Attempt to download
-    response = requests.get(thumbnail_url)
-    if response.status_code == 200:
-        with open(file_path, "wb") as f:
-            f.write(response.content)
-        print(f"Large Thumbnail downloaded to: {file_path}")
-    else:
-        print(f"Failed to download thumbnail from: {thumbnail_url}")
+    s = requests.Session()
+    s.mount(thumbnail_url, HTTPAdapter(max_retries=5))
+
+    try:
+        # TEST
+        response = s.get(thumbnail_url)
+        if response.status_code == 200:
+            with open(file_path, "wb") as f:
+                f.write(response.content)
+            print(f"Large Thumbnail downloaded to: {file_path}")
+            return True
+        else:
+            print(f"Failed to download thumbnail from: {thumbnail_url}")
+            alt_thumb_status = download_thumbnail_fallback(episode_data)
+    except MaxRetryError as e:
+        print(f"MaxRetryError occurred: {e}")
+        if hasattr(e, "pool"):
+            e.pool.close()
+        print("Closed connections to avoid further issues.")
+        if episode_data["large_thumbnail_alt"]:
+            alt_thumb_status = download_thumbnail_fallback(episode_data)
+    except NewConnectionError as e:
+        print(f"NewConnectionError occurred: {e}")
+        if episode_data["large_thumbnail_alt"]:
+            alt_thumb_status = download_thumbnail_fallback(episode_data)
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        if episode_data["large_thumbnail_alt"]:
+            alt_thumb_status = download_thumbnail_fallback(episode_data)
+
+    return alt_thumb_status
 
 
 def downloader(
@@ -207,14 +267,15 @@ def downloader(
 
     if episode_data is False:
         logging.warning("both api failed, initiating failover")
-        file_name = generate_basic_file_name(yt_dlp_dict_data)
-        dl_location = get_download_location()
+        video_options["writethumbnail"] = True
     else:
         file_name = generate_file_name(episode_data)
         dl_location = get_download_location()
-        download_thumbnail(
+        thumbnail_success = download_thumbnail(
             yt_dlp_dict_data["large_thumbnail_url_ytdl"], episode_data, show_mode
         )
+        if thumbnail_success is not True:
+            video_options["writethumbnail"] = True
 
     name_with_extension = file_name + "/" + file_name + ".%(ext)s"
 
@@ -268,7 +329,7 @@ def get_episode_data_from_api(url):
             uuid = episode_obj.get("uuid")
             episode_type = episode_obj.get("type")
             attributes = episode_obj.get("attributes", {})
-            display_title = make_filename_safe(attributes.get("display_title"))
+            display_title = make_filename_safe(attributes.get("title"))
             channel_id = attributes.get("channel_id")
             season_id = attributes.get("season_id")
             original_air_date_full = attributes.get("original_air_date", "")
@@ -309,17 +370,25 @@ def get_episode_data_from_rt_api(url):
         if episode_data:
             episode_obj = episode_data[0]
             episode_id = episode_obj.get("id")
+            uuid = episode_obj.get("uuid")
             images = episode_obj.get("included", {}).get("images", [])
             large_thumb = get_high_quality_thumbnail_link(images)
 
             episode_type = episode_obj.get("type")
             attributes = episode_obj.get("attributes", {})
-            display_title = make_filename_safe(attributes.get("display_title"))
+            display_title = make_filename_safe(attributes.get("title"))
             channel_id = attributes.get("channel_id")
             original_air_date_full = attributes.get("original_air_date", "")
             is_first_content = attributes.get("is_sponsors_only")
             show_id = show_title = attributes.get("show_id")
             show_title = make_filename_safe(get_show_name_from_id(show_id))
+            season_id = attributes.get("season_id")
+            parent_slug = attributes.get("parent_content_slug", "")
+
+            if season_id:
+                large_thumb_alt = f"https://cdn.ffaisal.com/thumbnail/{show_id}/{season_id}/{uuid}.jpg"
+            else:
+                large_thumb_alt = f"https://cdn.ffaisal.com/thumbnail/{show_id}/bonus-content-{parent_slug}/{uuid}.jpg"
 
             original_air_date = (
                 original_air_date_full.split("T")[0]
@@ -336,6 +405,7 @@ def get_episode_data_from_rt_api(url):
                 "is_first_content": is_first_content,
                 "channel_title": channel_title,
                 "large_thumb": large_thumb,
+                "large_thumb_alt": large_thumb_alt,
             }
         else:
             # go to fallback data fetch via my api
