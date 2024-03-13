@@ -11,6 +11,26 @@ from urllib3.exceptions import MaxRetryError, NewConnectionError
 from requests.adapters import HTTPAdapter
 
 
+def get_download_location():
+    script_location = os.getcwd()
+    download_location = os.path.join(script_location, "Downloads")
+
+    if not os.path.exists(download_location):
+        os.makedirs(download_location)
+
+    return download_location
+
+
+current_dir = get_download_location()
+log_output_file = os.path.join(current_dir, "rooster.log")
+# logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(
+    filename=log_output_file,
+    filemode="w",
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+)
+
+
 def get_high_quality_thumbnail_link(images):
     for image in images:
         image_type = image.get("type", "")
@@ -32,28 +52,6 @@ def get_archive_log_filename():
     return archive_log_location
 
 
-def get_download_location():
-    script_location = os.getcwd()
-    download_location = os.path.join(
-        script_location, "Downloads"
-    )  # Replace "downloads" with your desired folder name
-
-    if not os.path.exists(download_location):
-        os.makedirs(download_location)
-
-    return download_location
-
-
-current_dir = get_download_location()
-log_output_file = os.path.join(current_dir, "rooster.log")
-# logging.basicConfig(level=logging.DEBUG)
-logging.basicConfig(
-    filename=log_output_file,
-    filemode="w",
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-)
-
-
 def extract_data_from_ytdl_dict(info_dict):
     episode_id = info_dict["id"]
     episode_title = info_dict["title"]
@@ -69,26 +67,18 @@ def extract_data_from_ytdl_dict(info_dict):
 
     return {
         "id_numerical": episode_id,
-        "display_title": episode_title,
+        "title": episode_title,
         "channe_title": channe_title,
         "is_first_content": is_first_content,
         "large_thumbnail_url_ytdl": large_thumbnail_url_ytdl,
     }
 
 
-def append_to_csv(url, csv_filename="download_history.csv"):
-    current_directory = os.path.dirname(os.path.abspath(__file__))
-    full_path = os.path.join(current_directory, csv_filename)
-    file_exists = os.path.exists(full_path)
-
-    with open(full_path, mode="a", newline="") as file:
-        fieldnames = ["roosterteeth_url"]
-        writer = csv.DictWriter(file, fieldnames=fieldnames)
-
-        if not file_exists:
-            writer.writeheader()
-
-        writer.writerow({"url": url})
+# for ia
+def get_valid_filename(name):
+    s = str(name).strip().replace(" ", "_")
+    s = re.sub(r"(?u)[^-\w.]", "", s)
+    return s
 
 
 def make_filename_safe(input_string):
@@ -116,21 +106,57 @@ def is_tool(name):
     return which(name) is not None
 
 
-def generate_file_name(data):
-    return f"{data['original_air_date']} - {data['channel_title']} - {data['show_title']} - {data['display_title']} ({data['id_numerical']})"
+def generate_file_name(data, show_mode):
+    episode_number = get_episode_number(data["episode_number"])
+    season_number = get_season_name(data["season_number"])
+    if show_mode is True:
+        if data["is_first_content"] is True:
+            return f"{data['original_air_date']} - ☆ {season_number}{episode_number} - {data['title']} ({data['id_numerical']})"
+        else:
+            return f"{data['original_air_date']} - {season_number}{episode_number} - {data['title']} ({data['id_numerical']})"
+
+    else:
+        return f"{data['original_air_date']} - {data['channel_title']} - {data['show_title']} - {data['title']} ({data['id_numerical']})"
+
+
+def get_season_name(season):
+    season_string = str(season)
+    formatted_string = re.sub(r"\b(\d)\b", r"0\1", season_string)
+    return f"S{formatted_string}"
+
+
+def get_episode_number(episode):
+    episode_string = str(episode)
+    formatted_string = re.sub(r"\b(\d)\b", r"0\1", episode_string)
+    return f"E{formatted_string}"
+
+
+def generate_episode_container_name(data):
+    return f"{data['original_air_date']} - {data['id_numerical']}"
 
 
 def generate_basic_file_name(data):
-    return f"{data['channel_title']} {data['display_title']} [{data['id_numerical']}]"
+    return f"{data['channel_title']} {data['title']} [{data['id_numerical']}]"
 
 
-def download_thumbnail_fallback(episode_data):
+def download_thumbnail_fallback(episode_data, show_mode):
     # Ensure the download location exists
     dl_location = get_download_location()
     os.makedirs(dl_location, exist_ok=True)
 
     # Generate the file name and create the directory
-    file_name = generate_file_name(episode_data)
+    file_name = generate_file_name(episode_data, show_mode)
+    if show_mode is True:
+        file_directory = os.path.join(
+            dl_location,
+            episode_data["channel_title"],
+            episode_data["show_title"],
+            get_season_name(episode_data["season_number"]),
+            generate_episode_container_name(episode_data),
+        )
+    else:
+        file_directory = os.path.join(dl_location, file_name)
+
     file_directory = os.path.join(dl_location, episode_data["show_title"], file_name)
     thumbnail_url = episode_data["large_thumb_alt"]
     file_extension = os.path.splitext(thumbnail_url)[1]
@@ -163,10 +189,14 @@ def download_thumbnail(thumbnail_url, episode_data, show_mode):
     os.makedirs(dl_location, exist_ok=True)
 
     # Generate the file name and create the directory
-    file_name = generate_file_name(episode_data)
+    file_name = generate_file_name(episode_data, show_mode)
     if show_mode is True:
         file_directory = os.path.join(
-            dl_location, episode_data["show_title"], file_name
+            dl_location,
+            episode_data["channel_title"],
+            episode_data["show_title"],
+            get_season_name(episode_data["season_number"]),
+            generate_episode_container_name(episode_data),
         )
     else:
         file_directory = os.path.join(dl_location, file_name)
@@ -195,23 +225,23 @@ def download_thumbnail(thumbnail_url, episode_data, show_mode):
             return True
         else:
             print(f"Failed to download thumbnail from: {thumbnail_url}")
-            alt_thumb_status = download_thumbnail_fallback(episode_data)
+            alt_thumb_status = download_thumbnail_fallback(episode_data, show_mode)
     except MaxRetryError as e:
         print(f"MaxRetryError occurred: {e}")
         if hasattr(e, "pool"):
             e.pool.close()
         print("Closed connections to avoid further issues.")
         if episode_data["large_thumbnail_alt"]:
-            alt_thumb_status = download_thumbnail_fallback(episode_data)
+            alt_thumb_status = download_thumbnail_fallback(episode_data, show_mode)
     except NewConnectionError as e:
         print(f"NewConnectionError occurred: {e}")
         if episode_data["large_thumbnail_alt"]:
-            alt_thumb_status = download_thumbnail_fallback(episode_data)
+            alt_thumb_status = download_thumbnail_fallback(episode_data, show_mode)
 
     except Exception as e:
         print(f"An error occurred: {e}")
         if episode_data["large_thumbnail_alt"]:
-            alt_thumb_status = download_thumbnail_fallback(episode_data)
+            alt_thumb_status = download_thumbnail_fallback(episode_data, show_mode)
 
     return alt_thumb_status
 
@@ -222,6 +252,7 @@ def downloader(
     video_options = {
         "username": username,
         "password": password,
+        "restrictedfilenames": True,
         "forcejson": False,
         "writeinfojson": True,
         "writedescription": True,
@@ -249,7 +280,6 @@ def downloader(
         ]
     else:
         video_options["concurrent_fragment_downloads"] = int(concurrent_fragments)
-        print("aria2c not found, skipping.")
 
     # TODO:
     # why am i calling the info_dict before checking if I have filename
@@ -269,7 +299,7 @@ def downloader(
         logging.warning("both api failed, initiating failover")
         video_options["writethumbnail"] = True
     else:
-        file_name = generate_file_name(episode_data)
+        file_name = generate_file_name(episode_data, show_mode)
         dl_location = get_download_location()
         thumbnail_success = download_thumbnail(
             yt_dlp_dict_data["large_thumbnail_url_ytdl"], episode_data, show_mode
@@ -277,19 +307,22 @@ def downloader(
         if thumbnail_success is not True:
             video_options["writethumbnail"] = True
 
-    name_with_extension = file_name + "/" + file_name + ".%(ext)s"
+    name_with_extension = file_name + ".%(ext)s"
 
     # if we are in show mode, episode folder will be inside a show folder
     if show_mode is True:
         if episode_data is not False:
             full_name_with_dir = os.path.join(
-                dl_location, episode_data["show_title"], name_with_extension
+                dl_location,
+                episode_data["channel_title"],
+                episode_data["show_title"],
+                get_season_name(episode_data["season_number"]),
+                generate_episode_container_name(episode_data),
+                name_with_extension,
             )
-        else:
-            logging.warning("show mode True but has Fallback data")
-            full_name_with_dir = os.path.join(dl_location, name_with_extension)
     else:
-        full_name_with_dir = os.path.join(dl_location, name_with_extension)
+        logging.warning("show mode True but has Fallback data")
+        full_name_with_dir = os.path.join(dl_location, file_name, name_with_extension)
 
     video_options["outtmpl"] = full_name_with_dir
 
@@ -297,11 +330,10 @@ def downloader(
     print("Starting download: ", full_name_with_dir)
     try:
         yt_dlp.YoutubeDL(video_options).download(vod_url)
-        # append_to_csv(vod_url)
     except:
-        logging.warning("Error with yt_dlp downloading")
-    # TODO: Append only when done
-    # append_to_csv(vod_url)
+        logging.warning(
+            f"Error with yt_dlp downloading. ID: {episode_data['id_numerical']}"
+        )
 
 
 def get_rt_api_url(url):
@@ -329,7 +361,7 @@ def get_episode_data_from_api(url):
             uuid = episode_obj.get("uuid")
             episode_type = episode_obj.get("type")
             attributes = episode_obj.get("attributes", {})
-            display_title = make_filename_safe(attributes.get("title"))
+            title = make_filename_safe(attributes.get("title"))
             channel_id = attributes.get("channel_id")
             season_id = attributes.get("season_id")
             original_air_date_full = attributes.get("original_air_date", "")
@@ -337,6 +369,8 @@ def get_episode_data_from_api(url):
             show_id = attributes.get("show_id")
             parent_slug = attributes.get("parent_content_slug", "")
             show_title = make_filename_safe(get_show_name_from_id(show_id))
+            episode_number = attributes.get("number")
+            season = attributes.get("season_number", "99")
             if season_id:
                 large_thumb = f"https://cdn.ffaisal.com/thumbnail/{show_id}/{season_id}/{uuid}.jpg"
             else:
@@ -351,12 +385,14 @@ def get_episode_data_from_api(url):
 
             return {
                 "id_numerical": episode_id,
-                "display_title": display_title,
+                "title": title,
                 "original_air_date": original_air_date,
                 "show_title": show_title,
                 "is_first_content": is_first_content,
                 "channel_title": channel_title,
                 "large_thumb": large_thumb,
+                "season_number": season,
+                "episode_number": episode_number,
             }
         else:
             # write-fallback code via ytdlp info dict
@@ -376,7 +412,7 @@ def get_episode_data_from_rt_api(url):
 
             episode_type = episode_obj.get("type")
             attributes = episode_obj.get("attributes", {})
-            display_title = make_filename_safe(attributes.get("title"))
+            title = make_filename_safe(attributes.get("title"))
             channel_id = attributes.get("channel_id")
             original_air_date_full = attributes.get("original_air_date", "")
             is_first_content = attributes.get("is_sponsors_only")
@@ -384,6 +420,8 @@ def get_episode_data_from_rt_api(url):
             show_title = make_filename_safe(get_show_name_from_id(show_id))
             season_id = attributes.get("season_id")
             parent_slug = attributes.get("parent_content_slug", "")
+            season = attributes.get("season_number", "99")
+            episode_number = attributes.get("number")
 
             if season_id:
                 large_thumb_alt = f"https://cdn.ffaisal.com/thumbnail/{show_id}/{season_id}/{uuid}.jpg"
@@ -399,13 +437,15 @@ def get_episode_data_from_rt_api(url):
 
             return {
                 "id_numerical": episode_id,
-                "display_title": display_title,
+                "title": title,
                 "original_air_date": original_air_date,
                 "show_title": show_title,
                 "is_first_content": is_first_content,
                 "channel_title": channel_title,
                 "large_thumb": large_thumb,
                 "large_thumb_alt": large_thumb_alt,
+                "season_number": season,
+                "episode_number": episode_number,
             }
         else:
             # go to fallback data fetch via my api

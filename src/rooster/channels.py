@@ -30,7 +30,7 @@ channels = [
         "uuid": "ef34750e-ab1c-4c29-985f-cf42b066102b",
     },
     {
-        "name": "F**kFace",
+        "name": "F__kFace",
         "slug": "f-kface",
         "uuid": "75ba87e8-06fd-4482-bad9-52a4da2c6181",
     },
