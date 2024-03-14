@@ -88,5 +88,5 @@ channels = [
 def get_channel_name_from_id(channel_id):
     for channel in channels:
         if "uuid" in channel and channel["uuid"] == channel_id:
-            return channel["name"]
+            return channel["name"].strip()
     return None
