@@ -55,6 +55,17 @@ def get_archive_log_filename():
     return archive_log_location
 
 
+def exists_in_archive(id_numerical):
+    archive = get_archive_log_filename()
+    if os.path.isfile(archive):
+        with open(archive, "r") as f:
+            for line in f:
+                id_archive = int(line.split(" ")[1])
+                if id_archive == id_numerical:
+                    return True
+    return False
+
+
 def extract_data_from_ytdl_dict(info_dict):
     episode_id = info_dict["id"]
     episode_title = info_dict["title"]
@@ -479,8 +490,11 @@ def show_stuff(username, password, vod_url, concurrent_fragments, show_mode):
         exit()
     api_url = get_rt_api_url(url=vod_url)
     episode_data = get_episode_data_from_rt_api(api_url)
-    if episode_data is False:
-        episode_data = get_episode_data_from_api(vod_url)
-    downloader(
-        username, password, vod_url, episode_data, concurrent_fragments, show_mode
-    )
+    if exists_in_archive(episode_data["id_numerical"]):
+        print(f'{episode_data["id_numerical"]}: {episode_data["title"]} already recorded in archive')
+    else:
+        if episode_data is False:
+            episode_data = get_episode_data_from_api(vod_url)
+        downloader(
+            username, password, vod_url, episode_data, concurrent_fragments, show_mode
+        )
