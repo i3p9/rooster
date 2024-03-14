@@ -190,7 +190,8 @@ def download_thumbnail_fallback(episode_data, show_mode):
                 file_directory.mkdir(parents=True, exist_ok=True)
                 with open(file_path, "wb") as f:
                     f.write(response.content)
-                print(f"Large Thumbnail downloaded to: {file_path}")
+                print(f"Large Thumbnail Fallback downloaded to: {file_path}")
+                logging.info(f"Large Thumbnail Fallback downloaded to: {file_path}")
                 return True
             else:
                 logging.info(
@@ -254,6 +255,7 @@ def download_thumbnail(thumbnail_url, episode_data, show_mode):
                 with open(file_path, "wb") as f:
                     f.write(response.content)
                 print(f"Large Thumbnail downloaded to: {file_path}")
+                logging.info(f"Large Thumbnail downloaded to: {file_path}")
                 return True
             else:
                 print(f"Failed to download thumbnail from: {thumbnail_url}")
@@ -399,6 +401,9 @@ def downloader(
     print("Starting download: ", full_name_with_dir)
     try:
         yt_dlp.YoutubeDL(video_options).download(vod_url)
+        logging.info(
+            f"{episode_data['id_numerical']} Downloaded successfully {vod_url}"
+        )
     except:
         logging.critical(
             f"{episode_data['id_numerical']} Error with yt_dlp downloading for: {vod_url}"
