@@ -256,6 +256,8 @@ def downloader(
         "forcejson": False,
         "writeinfojson": True,
         "writedescription": True,
+        "writesubtitles": True,
+        "sub_lang": "all",
         # "writethumbnail": True,
         "nooverwrites": True,
         "merge_output_format": "mp4",
