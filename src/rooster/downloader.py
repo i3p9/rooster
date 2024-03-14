@@ -11,9 +11,12 @@ from urllib3.exceptions import MaxRetryError, NewConnectionError
 from requests.adapters import HTTPAdapter
 
 
-def get_download_location():
+def get_download_location(show_mode):
     script_location = os.getcwd()
-    download_location = os.path.join(script_location, "Downloads")
+    if show_mode is True:
+        download_location = os.path.join(script_location, "Downloads")
+    else:
+        download_location = os.path.join(script_location, "roosterteeth")
 
     if not os.path.exists(download_location):
         os.makedirs(download_location)
@@ -21,7 +24,7 @@ def get_download_location():
     return download_location
 
 
-current_dir = get_download_location()
+current_dir = get_download_location(False)
 log_output_file = os.path.join(current_dir, "rooster.log")
 # logging.basicConfig(level=logging.DEBUG)
 logging.basicConfig(
@@ -114,9 +117,9 @@ def generate_file_name(data, show_mode):
             return f"{data['original_air_date']} - ☆ {season_number}{episode_number} - {data['title']} ({data['id_numerical']})"
         else:
             return f"{data['original_air_date']} - {season_number}{episode_number} - {data['title']} ({data['id_numerical']})"
-
     else:
-        return f"{data['original_air_date']} - {data['channel_title']} - {data['show_title']} - {data['title']} ({data['id_numerical']})"
+        safe_title = get_valid_filename(data["title"])
+        return f"{data['original_air_date']}_{safe_title}_[{data['id_numerical']}]"
 
 
 def get_season_name(season):
@@ -141,7 +144,7 @@ def generate_basic_file_name(data):
 
 def download_thumbnail_fallback(episode_data, show_mode):
     # Ensure the download location exists
-    dl_location = get_download_location()
+    dl_location = get_download_location(show_mode)
     os.makedirs(dl_location, exist_ok=True)
 
     # Generate the file name and create the directory
@@ -155,7 +158,11 @@ def download_thumbnail_fallback(episode_data, show_mode):
             generate_episode_container_name(episode_data),
         )
     else:
-        file_directory = os.path.join(dl_location, file_name)
+        safe_channel_name = get_valid_filename(episode_data["channel_title"])
+        safe_show_name = get_valid_filename(episode_data["show_title"])
+        file_directory = os.path.join(
+            dl_location, safe_channel_name, safe_show_name, file_name
+        )
 
     file_directory = os.path.join(dl_location, episode_data["show_title"], file_name)
     thumbnail_url = episode_data["large_thumb_alt"]
@@ -185,7 +192,7 @@ def download_thumbnail_fallback(episode_data, show_mode):
 
 def download_thumbnail(thumbnail_url, episode_data, show_mode):
     # Ensure the download location exists
-    dl_location = get_download_location()
+    dl_location = get_download_location(show_mode)
     os.makedirs(dl_location, exist_ok=True)
 
     # Generate the file name and create the directory
@@ -199,7 +206,11 @@ def download_thumbnail(thumbnail_url, episode_data, show_mode):
             generate_episode_container_name(episode_data),
         )
     else:
-        file_directory = os.path.join(dl_location, file_name)
+        safe_channel_name = get_valid_filename(episode_data["channel_title"])
+        safe_show_name = get_valid_filename(episode_data["show_title"])
+        file_directory = os.path.join(
+            dl_location, safe_channel_name, safe_show_name, file_name
+        )
     os.makedirs(file_directory, exist_ok=True)
 
     if thumbnail_url is not None:  # from yt-dlp data
@@ -302,7 +313,7 @@ def downloader(
         video_options["writethumbnail"] = True
     else:
         file_name = generate_file_name(episode_data, show_mode)
-        dl_location = get_download_location()
+        dl_location = get_download_location(show_mode)
         thumbnail_success = download_thumbnail(
             yt_dlp_dict_data["large_thumbnail_url_ytdl"], episode_data, show_mode
         )
@@ -324,7 +335,15 @@ def downloader(
             )
     else:
         logging.warning("show mode True but has Fallback data")
-        full_name_with_dir = os.path.join(dl_location, file_name, name_with_extension)
+        safe_channel_name = get_valid_filename(episode_data["channel_title"])
+        safe_show_name = get_valid_filename(episode_data["show_title"])
+        full_name_with_dir = os.path.join(
+            dl_location,
+            safe_channel_name,
+            safe_show_name,
+            file_name,
+            name_with_extension,
+        )
 
     video_options["outtmpl"] = full_name_with_dir
 
