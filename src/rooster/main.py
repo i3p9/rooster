@@ -1,6 +1,33 @@
 #!/usr/bin/python3 -B
 from .downloader import show_stuff
 import argparse
+import logging
+import os
+
+
+def get_download_location(show_mode):
+    script_location = os.getcwd()
+    if show_mode is True:
+        download_location = os.path.join(script_location, "Downloads")
+    else:
+        download_location = os.path.join(script_location, "roosterteeth")
+
+    if not os.path.exists(download_location):
+        os.makedirs(download_location)
+
+    return download_location
+
+
+current_dir = get_download_location(False)
+log_output_file = os.path.join(current_dir, "rooster.log")
+
+
+logging.basicConfig(
+    filename=log_output_file,
+    filemode="w",
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    level=logging.DEBUG,
+)
 
 
 def process_links_from_file(
@@ -11,10 +38,17 @@ def process_links_from_file(
         num_links = len(links)
         print(f"Found {num_links} links.")
 
-        for index, line in enumerate(links, start=1):
-            print(f"Downloading link {index} of {num_links}: {line.strip()}")
+    for index, line in enumerate(links, start=1):
+        print(f"Downloading link {index} of {num_links}: {line.strip()}")
+        try:
             show_stuff(
                 username, password, line.strip(), concurrent_fragments, show_mode
+            )
+        except Exception as e:
+            # Log the exception
+            print(f"Error occurred while processing link {index}: {line.strip()}")
+            logging.critical(
+                f"Error occurred while processing link {index}: {line.strip()}"
             )
 
 
