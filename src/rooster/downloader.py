@@ -1,6 +1,5 @@
 import os
 import re
-import csv
 import logging
 from urllib.parse import urlparse
 import requests
@@ -30,7 +29,7 @@ log_output_file = os.path.join(current_dir, "rooster.log")
 # logging.basicConfig(level=logging.DEBUG)
 logging.basicConfig(
     filename=log_output_file,
-    filemode="w",
+    filemode="a",
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     level=logging.DEBUG,
 )
@@ -188,11 +187,18 @@ def download_thumbnail_fallback(episode_data, show_mode):
                 print(f"Large Thumbnail downloaded to: {file_path}")
                 return True
             else:
+                logging.info(
+                    f"Thumbnail Fallback: Failed to download thumbnail from: {thumbnail_url}"
+                )
                 print(f"Failed to download thumbnail from: {thumbnail_url}")
         except RequestException as e:
             print(
                 f"An error occurred: {e}. Please note this episodeId: {episode_data['id_numerical']}"
             )
+            logging.info(
+                f"An error occurred: {e}. Please note this episodeId: {episode_data['id_numerical']}"
+            )
+
     except OSError as os_err:
         print(f"Error occurred: {os_err}")
         logging.warning(f"Error occurred: {os_err}")
@@ -246,6 +252,9 @@ def download_thumbnail(thumbnail_url, episode_data, show_mode):
                 return True
             else:
                 print(f"Failed to download thumbnail from: {thumbnail_url}")
+                logging.info(
+                    f"An error occurred: {e}. Please note this episodeId: {episode_data['id_numerical']}"
+                )
                 alt_thumb_status = download_thumbnail_fallback(episode_data, show_mode)
         except MaxRetryError as e:
             print(f"MaxRetryError occurred: {e}")
@@ -327,19 +336,29 @@ def downloader(
         print(err)
         print("Are you sure you are logged in?")
         print("If you are, are you a FIRST member?")
-        logging.critical(f"{err} yt-dlp parser error for {vod_url}")
+        logging.warning(f"{err} yt-dlp parser error for {vod_url}")
     yt_dlp_dict_data = extract_data_from_ytdl_dict(info_dict=info_dict)
 
     if episode_data is False:
-        logging.critical("both api failed, initiating failover")
+        logging.warning("both api failed, initiating failover")
         video_options["writethumbnail"] = True
     else:
         file_name = generate_file_name(episode_data, show_mode)
         dl_location = get_download_location(show_mode)
         try:
-            thumbnail_success = download_thumbnail(
-                yt_dlp_dict_data["large_thumbnail_url_ytdl"], episode_data, show_mode
-            )
+            if yt_dlp_dict_data["large_thumbnail_url_ytdl"]:
+                thumbnail_success = download_thumbnail(
+                    yt_dlp_dict_data["large_thumbnail_url_ytdl"],
+                    episode_data,
+                    show_mode,
+                )
+            else:
+                thumbnail_success = download_thumbnail(
+                    episode_data["large_thumb"],
+                    episode_data,
+                    show_mode,
+                )
+
         except FileNotFoundError as fnf_err:
             print(f"Error with file location or sth {fnf_err}")
             logging.warning(f"Error with file location error {fnf_err}")

@@ -24,7 +24,7 @@ log_output_file = os.path.join(current_dir, "rooster.log")
 
 logging.basicConfig(
     filename=log_output_file,
-    filemode="w",
+    filemode="a",
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     level=logging.DEBUG,
 )
