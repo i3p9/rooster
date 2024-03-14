@@ -155,6 +155,7 @@ def generate_basic_file_name(data):
 
 
 def download_thumbnail_fallback(episode_data, show_mode):
+    print("Attemping to download HQ thumbnail... (Fallback)")
     try:
         # Ensure the download location exists
         dl_path = Path(get_download_location(show_mode))
@@ -211,6 +212,7 @@ def download_thumbnail_fallback(episode_data, show_mode):
 
 
 def download_thumbnail(thumbnail_url, episode_data, show_mode):
+    print("Attemping to download HQ thumbnail...")
     try:
         # Ensure the download location exists
         dl_path = Path(get_download_location(show_mode))
@@ -236,7 +238,7 @@ def download_thumbnail(thumbnail_url, episode_data, show_mode):
         if thumbnail_url is not None:  # from yt-dlp data
             file_extension = os.path.splitext(thumbnail_url)[1]
         else:  # from api data
-            logging.warning("Downloading thumbnail using fallback method")
+            logging.warning("Downloading thumbnail using RT API method")
             thumbnail_url = episode_data["large_thumb"]
             file_extension = os.path.splitext(thumbnail_url)[1]
 
