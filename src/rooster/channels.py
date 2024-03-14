@@ -78,7 +78,7 @@ channels = [
         "uuid": "92f780eb-ebfe-4bf5-a3b5-c6ad5460a5f1",
     },
     {
-        "name": "Tales From the Stinky Dragon ",
+        "name": "Tales From the Stinky Dragon",
         "slug": "tales-from-the-stinky-dragon",
         "uuid": "44ef6a57-e965-40e6-942b-c28d7dec727b",
     },
