@@ -58,7 +58,7 @@ channels = [
         "value": "6ce10ccb-f945-4b21-b157-5c5619bf1de3",
     },
     {
-        "name": "Red vs. Blue ",
+        "name": "Red vs. Blue",
         "slug": "red-vs-blue-universe",
         "uuid": "5167de51-5719-4c1a-b9c5-ed727ef8f3a3",
     },

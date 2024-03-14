@@ -331,7 +331,7 @@ shows = [
     },
     {
         "id": 34,
-        "title": "A Simple Walk ",
+        "title": "A Simple Walk",
         "slug": "a-simple-walk",
         "uuid": "ff92976b-464d-11e7-a302-065410f210c4",
     },
