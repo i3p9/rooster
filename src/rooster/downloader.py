@@ -55,13 +55,16 @@ def get_archive_log_filename():
     return archive_log_location
 
 
-def exists_in_archive(id_numerical):
+def exists_in_archive(episode_data):
+    id_episode = str(episode_data["id_numerical"])
+    if episode_data["season_number"] == "99":
+        id_episode += "-bonus"  # Handle bonus ids
     archive = get_archive_log_filename()
     if os.path.isfile(archive):
         with open(archive, "r") as f:
             for line in f:
-                id_archive = int(line.split(" ")[1])
-                if id_archive == id_numerical:
+                id_archive = line.split(" ")[1].rstrip()
+                if id_archive == id_episode:
                     return True
     return False
 
@@ -490,7 +493,7 @@ def show_stuff(username, password, vod_url, concurrent_fragments, show_mode):
         exit()
     api_url = get_rt_api_url(url=vod_url)
     episode_data = get_episode_data_from_rt_api(api_url)
-    if exists_in_archive(episode_data["id_numerical"]):
+    if exists_in_archive(episode_data):
         print(f'{episode_data["id_numerical"]}: {episode_data["title"]} already recorded in archive')
     else:
         if episode_data is False:
