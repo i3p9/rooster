@@ -182,9 +182,13 @@ def upload_ia(directory_location, metadata, episoda_data):
     print("files: ", directory_location)
     print("metadata: ", metadata)
     r = internetarchive.upload(
-        identifier=identifier_ia, files=directory_location, metadata=metadata
+        identifier=identifier_ia, files=directory_location, metadata=metadata,debug=True
     )
-    print(r[0].status_code)
+    if r[0].status_code is not 200:
+        print(f"Upload failed for: https://roosterteeth.com/watch/{episoda_data['slug']}")
+        logging.warning(f"Upload failed for: https://roosterteeth.com/watch/{episoda_data['slug']}")
+    else:
+        print(f"Uploaded successfully to: https://archive.org/details/roosterteeth-{identifier_ia}")
 
 
 def generate_ia_meta(episode_data) -> dict:
@@ -497,7 +501,7 @@ def downloader(
             full_name_with_dir /= get_season_name(episode_data["season_number"])
             full_name_with_dir /= generate_episode_container_name(episode_data)
             full_name_with_dir /= name_with_extension
-    else:
+    else: #IA Mode
         logging.warning("show mode True but has Fallback data")
         safe_channel_name = get_valid_filename(episode_data["channel_title"])
         safe_show_name = get_valid_filename(episode_data["show_title"])
