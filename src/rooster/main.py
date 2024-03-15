@@ -31,7 +31,7 @@ logging.basicConfig(
 
 
 def process_links_from_file(
-    username, password, filename, concurrent_fragments, show_mode
+    username, password, filename, concurrent_fragments, show_mode, upload_to_ia
 ):
     with open(filename, "r") as file:
         links = file.readlines()
@@ -42,7 +42,12 @@ def process_links_from_file(
         print(f"Downloading link {index} of {num_links}: {line.strip()}")
         try:
             show_stuff(
-                username, password, line.strip(), concurrent_fragments, show_mode
+                username,
+                password,
+                line.strip(),
+                concurrent_fragments,
+                show_mode,
+                upload_to_ia,
             )
         except Exception as e:
             # Log the exception
@@ -64,6 +69,7 @@ def main():
         help="Number of concurrent fragments (default is 10)",
     )
     parser.add_argument("--show", action="store_true", help="Flag to show something")
+    parser.add_argument("--ia", action="store_true", help="Upload to IA?")
 
     parser.add_argument("input", help="URL or file containing list of links")
 
@@ -74,6 +80,7 @@ def main():
     input_value = args.input
     concurrent_fragments = args.concurrent_fragments
     show_flag = args.show
+    upload_to_ia = args.ia
 
     if show_flag:
         show_mode = True
@@ -82,10 +89,22 @@ def main():
 
     if input_value.endswith(".txt"):
         process_links_from_file(
-            username, password, input_value, concurrent_fragments, show_mode
+            username,
+            password,
+            input_value,
+            concurrent_fragments,
+            show_mode,
+            upload_to_ia,
         )
     else:
-        show_stuff(username, password, input_value, concurrent_fragments, show_mode)
+        show_stuff(
+            username,
+            password,
+            input_value,
+            concurrent_fragments,
+            show_mode,
+            upload_to_ia,
+        )
 
 
 if __name__ == "__main__":

@@ -157,7 +157,7 @@ def get_folder_location_for_ia_upload(episode_data) -> str:
     return str(ia_upload_dir)
 
 
-def check_if_ia_item_exists(episode_data) ->bool:
+def check_if_ia_item_exists(episode_data) -> bool:
     itemname = get_itemname(episode_data)
     item = internetarchive.get_item(itemname)
     if item.exists:
@@ -182,13 +182,29 @@ def upload_ia(directory_location, metadata, episoda_data):
     print("files: ", directory_location)
     print("metadata: ", metadata)
     r = internetarchive.upload(
-        identifier=identifier_ia, files=directory_location, metadata=metadata,debug=True
+        identifier=identifier_ia,
+        files=directory_location,
+        metadata=metadata,
+        debug=True,
     )
-    if r[0].status_code is not 200:
-        print(f"Upload failed for: https://roosterteeth.com/watch/{episoda_data['slug']}")
-        logging.warning(f"Upload failed for: https://roosterteeth.com/watch/{episoda_data['slug']}")
+    if r[0].status_code != 200:
+        print(
+            f"Upload failed for: https://roosterteeth.com/watch/{episoda_data['slug']}"
+        )
+        logging.warning(
+            f"Upload failed for: https://roosterteeth.com/watch/{episoda_data['slug']}"
+        )
     else:
-        print(f"Uploaded successfully to: https://archive.org/details/roosterteeth-{identifier_ia}")
+        print(
+            f"Uploaded successfully to: https://archive.org/details/roosterteeth-{identifier_ia}"
+        )
+        try:
+            print("Cleaning up...")
+            logging.info(f"Deleting files after IA uploads from {directory_location}")
+            directory_location.rmdir()
+        except Exception as e:
+            print(f"An error occurred while uploading {identifier_ia} {e}")
+            logging.critical(f"An error occurred while uploading {identifier_ia} {e}")
 
 
 def generate_ia_meta(episode_data) -> dict:
@@ -214,16 +230,23 @@ def generate_ia_meta(episode_data) -> dict:
         genres_list.extend(["RoosterTeeth", creator, episode_data["slug"]])
         tags_list = ";".join(genres_list)
 
+    show_title = episode_data["show_title"]
+    season_number = episode_data["season_number"]
+    episode_number = episode_data["episode_number"]
+
     metadata = dict(
         mediatype=mediatype,
         collection=collection,
-        creator=creator,
+        creator=creator,  # channel title
         title=title,
         description=description,
         date=date,
         year=year,
         subject=tags_list,
         originalUrl=original_url,
+        show_title=show_title,
+        season=int(season_number),
+        episode=int(episode_number),
     )
     return metadata
 
@@ -409,7 +432,13 @@ def download_thumbnail(thumbnail_url, episode_data, show_mode):
 
 
 def downloader(
-    username, password, vod_url, episode_data, concurrent_fragments, show_mode
+    username,
+    password,
+    vod_url,
+    episode_data,
+    concurrent_fragments,
+    show_mode,
+    upload_to_ia,
 ):
     video_options = {
         "username": username,
@@ -501,7 +530,7 @@ def downloader(
             full_name_with_dir /= get_season_name(episode_data["season_number"])
             full_name_with_dir /= generate_episode_container_name(episode_data)
             full_name_with_dir /= name_with_extension
-    else: #IA Mode
+    else:  # IA Mode
         logging.warning("show mode True but has Fallback data")
         safe_channel_name = get_valid_filename(episode_data["channel_title"])
         safe_show_name = get_valid_filename(episode_data["show_title"])
@@ -516,11 +545,14 @@ def downloader(
     video_options["outtmpl"] = str(full_name_with_dir)
 
     # ia prepare
-    container_location = (get_folder_location_for_ia_upload(episode_data=episode_data) + "/")
-    ia_metadata = generate_ia_meta(episode_data=episode_data)
+    if upload_to_ia:
+        container_location = (
+            get_folder_location_for_ia_upload(episode_data=episode_data) + "/"
+        )
+        ia_metadata = generate_ia_meta(episode_data=episode_data)
 
-    print(container_location)
-    print(ia_metadata)
+        print(container_location)
+        print(ia_metadata)
 
     # pass off to yt-dlp for downloading
     print("Starting download: ", full_name_with_dir)
@@ -529,8 +561,25 @@ def downloader(
         logging.info(
             f"{episode_data['id_numerical']} Downloaded successfully {vod_url}"
         )
-        #check whether every file has downloaded. specially mp4
-        #upload_ia
+        # check whether every file has downloaded. specially mp4
+        # upload_ia
+        if upload_to_ia:
+            try:
+                container_dir = full_name_with_dir.parent
+                upload_ia(
+                    directory_location=container_location,
+                    metadata=ia_metadata,
+                    episoda_data=episode_data,
+                )
+                print(f"after upload this dir will be removed: {container_dir}")
+            except Exception as e:
+                print(
+                    f"An error occurred while trying to upload from this location: {container_location}"
+                )
+                logging.critical(
+                    f"An error occurred while trying to upload from this location: {container_location}"
+                )
+
     except:
         logging.critical(
             f"{episode_data['id_numerical']} Error with yt_dlp downloading for: {vod_url}"
@@ -667,7 +716,9 @@ def get_episode_data_from_rt_api(url):
             return False
 
 
-def show_stuff(username, password, vod_url, concurrent_fragments, show_mode):
+def show_stuff(
+    username, password, vod_url, concurrent_fragments, show_mode, upload_to_ia
+):
     if not is_tool("ffmpeg"):
         print("ffmpeg not installed, go do that")
         exit()
@@ -682,5 +733,11 @@ def show_stuff(username, password, vod_url, concurrent_fragments, show_mode):
         if episode_data is False:
             episode_data = get_episode_data_from_api(vod_url)
         downloader(
-            username, password, vod_url, episode_data, concurrent_fragments, show_mode
+            username,
+            password,
+            vod_url,
+            episode_data,
+            concurrent_fragments,
+            show_mode,
+            upload_to_ia,
         )
