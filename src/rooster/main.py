@@ -48,7 +48,7 @@ def process_links_from_file(
             # Log the exception
             print(f"Error occurred while processing link {index}: {line.strip()}")
             logging.critical(
-                f"Error occurred while processing link {index}: {line.strip()}"
+                f"{e} - Error occurred while processing link {index}: {line.strip()}"
             )
 
 

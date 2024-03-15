@@ -10,6 +10,7 @@ from urllib3.exceptions import MaxRetryError, NewConnectionError
 from requests.adapters import HTTPAdapter
 from requests.exceptions import RequestException
 from pathlib import Path
+import internetarchive
 
 
 def get_download_location(show_mode: bool) -> Path:
@@ -133,6 +134,94 @@ def is_tool(name):
     from shutil import which
 
     return which(name) is not None
+
+
+# Upload to IA
+
+
+def get_itemname(data) -> str:
+    # roosterteeth-test appended for test purposes. -test will be removed
+    return f"roosterteeth-test-{data['id_numerical']}"
+
+
+def get_folder_location_for_ia_upload(episode_data) -> str:
+    dl_path = get_download_location(True)
+    ia_upload_dir = (
+        dl_path
+        / episode_data["channel_title"]
+        / episode_data["show_title"]
+        / get_season_name(episode_data["season_number"])
+        / generate_episode_container_name(episode_data)
+    )
+
+    return str(ia_upload_dir)
+
+
+def check_if_ia_item_exists(episode_data) ->bool:
+    itemname = get_itemname(episode_data)
+    item = internetarchive.get_item(itemname)
+    if item.exists:
+        return True
+    return False
+
+
+def upload_ia(directory_location, metadata, episoda_data):
+    identifier_ia = get_itemname(episoda_data)
+
+    # TODO: parse ia_config file
+
+    # parsed_ia_s3_config = parse_config_file(ia_config_path)[2]["s3"]
+    # s3_access_key = parsed_ia_s3_config["access"]
+    # s3_secret_key = parsed_ia_s3_config["secret"]
+
+    # if None in {s3_access_key, s3_secret_key}:
+    #     msg = "`internetarchive` configuration file is not configured" " properly."
+    #     raise Exception(msg)
+
+    print("identifier: ", identifier_ia)
+    print("files: ", directory_location)
+    print("metadata: ", metadata)
+    r = internetarchive.upload(
+        identifier=identifier_ia, files=directory_location, metadata=metadata
+    )
+    print(r[0].status_code)
+
+
+def generate_ia_meta(episode_data) -> dict:
+    collection = "opensource_movies"
+    mediatype = "movies"
+    title = episode_data["title"]
+    creator = episode_data["channel_title"]
+    description = episode_data["description"]
+    if description is None:
+        description = ""
+    else:
+        description = re.sub("\r?\n", "<br>", description)
+    date = episode_data["original_air_date"]
+    year = episode_data["original_air_date"][:4]
+    episode_slug = episode_data["slug"]
+    original_url = f"https://roosterteeth.com/watch/{episode_slug}"
+    genres_list = episode_data["genres"]
+    if genres_list is not None:
+        genres_list.extend(["RoosterTeeth", creator, episode_data["slug"]])
+        tags_list = ";".join(genres_list)
+    else:  # TODO:256 byte fix
+        genres_list = []
+        genres_list.extend(["RoosterTeeth", creator, episode_data["slug"]])
+        tags_list = ";".join(genres_list)
+
+    metadata = dict(
+        mediatype=mediatype,
+        collection=collection,
+        creator=creator,
+        title=title,
+        description=description,
+        date=date,
+        year=year,
+        subject=tags_list,
+        originalUrl=original_url,
+    )
+    return metadata
 
 
 def generate_file_name(data, show_mode) -> str:
@@ -422,6 +511,13 @@ def downloader(
 
     video_options["outtmpl"] = str(full_name_with_dir)
 
+    # ia prepare
+    container_location = (get_folder_location_for_ia_upload(episode_data=episode_data) + "/")
+    ia_metadata = generate_ia_meta(episode_data=episode_data)
+
+    print(container_location)
+    print(ia_metadata)
+
     # pass off to yt-dlp for downloading
     print("Starting download: ", full_name_with_dir)
     try:
@@ -429,6 +525,8 @@ def downloader(
         logging.info(
             f"{episode_data['id_numerical']} Downloaded successfully {vod_url}"
         )
+        #check whether every file has downloaded. specially mp4
+        #upload_ia
     except:
         logging.critical(
             f"{episode_data['id_numerical']} Error with yt_dlp downloading for: {vod_url}"
@@ -481,6 +579,9 @@ def get_episode_data_from_api(url):
                 else None
             )
             channel_title = make_filename_safe(get_channel_name_from_id(channel_id))
+            description = attributes.get("description")
+            slug = attributes.get("slug")
+            genres = attributes.get("genres")
 
             return {
                 "id_numerical": episode_id,
@@ -493,6 +594,9 @@ def get_episode_data_from_api(url):
                 "season_number": season,
                 "episode_number": episode_number,
                 "episode_type": episode_type,
+                "description": description,
+                "slug": slug,
+                "genres": genres,
             }
         else:
             # write-fallback code via ytdlp info dict
@@ -534,6 +638,9 @@ def get_episode_data_from_rt_api(url):
                 else None
             )
             channel_title = make_filename_safe(get_channel_name_from_id(channel_id))
+            description = attributes.get("description")
+            slug = attributes.get("slug")
+            genres = attributes.get("genres")
 
             return {
                 "id_numerical": episode_id,
@@ -547,6 +654,9 @@ def get_episode_data_from_rt_api(url):
                 "season_number": season,
                 "episode_number": episode_number,
                 "episode_type": episode_type,
+                "description": description,
+                "slug": slug,
+                "genres": genres,
             }
         else:
             # go to fallback data fetch via my api
@@ -561,7 +671,9 @@ def show_stuff(username, password, vod_url, concurrent_fragments, show_mode):
     episode_data = None
     episode_data = get_episode_data_from_rt_api(api_url)
     if exists_in_archive(episode_data):
-        print(f'{episode_data["id_numerical"]}: {episode_data["title"]} already recorded in archive')
+        print(
+            f'{episode_data["id_numerical"]}: {episode_data["title"]} already recorded in archive'
+        )
     else:
         if episode_data is False:
             episode_data = get_episode_data_from_api(vod_url)
