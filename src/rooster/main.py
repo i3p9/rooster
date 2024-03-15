@@ -68,12 +68,15 @@ def main():
         type=int,
         help="Number of concurrent fragments (default is 10)",
     )
-    parser.add_argument("--show", action="store_true", help="Flag to show something")
-    parser.add_argument("--ia", action="store_true", help="Upload to IA?")
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("--show", action="store_true", help="Flag to show something")
+    group.add_argument("--ia", action="store_true", help="Upload to IA?")
 
     parser.add_argument("input", help="URL or file containing list of links")
 
     args = parser.parse_args()
+    if args.show and args.ia:
+        parser.error("Cannot specify both --show and --ia. Please choose one.")
 
     username = args.email
     password = args.password
