@@ -52,18 +52,7 @@ def process_links_from_file(
             )
 
 
-def read_version_from_file():
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    with open(f"{dir_path}/VERSION", "r") as file:
-        version = (
-            file.read().strip()
-        )  # Read the content and remove leading/trailing whitespace
-    return version
-
-
 def main():
-    print(read_version_from_file())
-    exit()
     parser = argparse.ArgumentParser(description="Process command line arguments")
 
     parser.add_argument("--email", help="Email for authentication")

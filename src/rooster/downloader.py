@@ -124,14 +124,19 @@ def is_tool(name):
 def generate_file_name(data, show_mode) -> str:
     episode_number = get_episode_number(data["episode_number"])
     season_number = get_season_name(data["season_number"])
+    if data["episode_type"] == "bonus_feature":
+        proper_id = f"{data['id_numerical']}-bonus"
+    else:
+        proper_id = f"{data['id_numerical']}"
+
     if show_mode is True:
         if data["is_first_content"] is True:
-            return f"{data['original_air_date']} - ☆ {season_number}{episode_number} - {data['title']} ({data['id_numerical']})"
+            return f"{data['original_air_date']} - ☆ {season_number}{episode_number} - {data['title']} ({proper_id})"
         else:
-            return f"{data['original_air_date']} - {season_number}{episode_number} - {data['title']} ({data['id_numerical']})"
+            return f"{data['original_air_date']} - {season_number}{episode_number} - {data['title']} ({proper_id})"
     else:
         safe_title = get_valid_filename(data["title"])
-        return f"{data['original_air_date']}_{safe_title}_[{data['id_numerical']}]"
+        return f"{data['original_air_date']}_{safe_title}_[{proper_id}]"
 
 
 def get_season_name(season):
@@ -146,8 +151,13 @@ def get_episode_number(episode):
     return f"E{formatted_string}"
 
 
-def generate_episode_container_name(data):
-    return f"{data['original_air_date']} - {data['id_numerical']}"
+def generate_episode_container_name(data) -> str:
+    if data["episode_type"] == "bonus_feature":
+        proper_id = f"{data['id_numerical']}-bonus"
+    else:
+        proper_id = f"{data['id_numerical']}"
+
+    return f"{data['original_air_date']} - {proper_id}"
 
 
 def generate_basic_file_name(data):
@@ -337,6 +347,7 @@ def downloader(
         )
     except (yt_dlp.utils.DownloadError, yt_dlp.utils.ExtractorError) as err:
         print(err)
+        print("Are you sure its a valid link?")
         print("Are you sure you are logged in?")
         print("If you are, are you a FIRST member?")
         logging.warning(f"{err} yt-dlp parser error for {vod_url}")
@@ -467,6 +478,7 @@ def get_episode_data_from_api(url):
                 "large_thumb": large_thumb,
                 "season_number": season,
                 "episode_number": episode_number,
+                "episode_type": episode_type,
             }
         else:
             # write-fallback code via ytdlp info dict
@@ -520,6 +532,7 @@ def get_episode_data_from_rt_api(url):
                 "large_thumb_alt": large_thumb_alt,
                 "season_number": season,
                 "episode_number": episode_number,
+                "episode_type": episode_type,
             }
         else:
             # go to fallback data fetch via my api
