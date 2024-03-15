@@ -53,7 +53,7 @@ def process_links_from_file(
                 f"Error occurred while processing link {index}: {line.strip()}"
             )
 
-def process_links_from_list(username, password, episode_links, concurrent_fragments, show_mode):
+def process_links_from_list(username, password, episode_links, concurrent_fragments, show_mode,input_value):
     num_links = len(episode_links)
     for index,episode in enumerate(episode_links):
         print(f"Downloading link {index+1} of {num_links}: {episode}")
@@ -63,9 +63,9 @@ def process_links_from_list(username, password, episode_links, concurrent_fragme
             )
         except Exception as e:
             # Log the exception
-            print(f"Error occurred while processing link {index}: {num_links}")
+            print(f"Error occurred while processing link {index+1}: {episode} | Input : {input_value}")
             logging.critical(
-                f"Error occurred while processing link {index}: {num_links}"
+                f"Error occurred while processing link {index+1}: {episode} | Input: {input_value}"
             )
 
 
@@ -108,7 +108,7 @@ def main():
                 parser = RoosterTeethParser()
                 episode_links = parser.get_episode_links(input_value)
                 if episode_links is not None:
-                    process_links_from_list(username, password, episode_links, concurrent_fragments, show_mode)
+                    process_links_from_list(username, password, episode_links, concurrent_fragments, show_mode,input_value)
                 else:
                     print(f"something went wrong with parsing: {input_value}. Try again or check your links")
                     logging.critical(f"parsing failed for: {input_value}")
