@@ -1,6 +1,5 @@
 import os
 import re
-import csv
 import logging
 from urllib.parse import urlparse
 import requests
@@ -9,28 +8,34 @@ from .channels import get_channel_name_from_id
 from .shows import get_show_name_from_id
 from urllib3.exceptions import MaxRetryError, NewConnectionError
 from requests.adapters import HTTPAdapter
+from requests.exceptions import RequestException
+from pathlib import Path
 
 
-def get_download_location(show_mode):
-    script_location = os.getcwd()
+def get_download_location(show_mode: bool) -> Path:
+    """
+    Retrieves the download location based on the show mode.
+    Args: show_mode (bool):
+    Returns:
+        Path: A pathlib.Path object
+    """
+
+    script_path = Path.cwd()
+
     if show_mode is True:
-        download_location = os.path.join(script_location, "Downloads")
+        download_path = script_path / "Downloads"
     else:
-        download_location = os.path.join(script_location, "roosterteeth")
+        download_path = script_path / "roosterteeth"
 
-    if not os.path.exists(download_location):
-        os.makedirs(download_location)
-
-    return download_location
+    download_path.mkdir(parents=True, exist_ok=True)
+    return download_path
 
 
-current_dir = get_download_location(False)
-log_output_file = os.path.join(current_dir, "rooster.log")
-# logging.basicConfig(level=logging.DEBUG)
 logging.basicConfig(
-    filename=log_output_file,
-    filemode="w",
+    filename="rooster.log",
+    filemode="a",
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    level=logging.DEBUG,
 )
 
 
@@ -50,9 +55,16 @@ def get_high_quality_thumbnail_link(images):
 
 
 def get_archive_log_filename():
-    script_location = os.getcwd()
-    archive_log_location = os.path.join(script_location, "archive.log")
-    return archive_log_location
+    """
+    Gets the path to the archive log file using pathlib.
+    Returns:
+        Path: The path to the archive log file.
+    """
+
+    script_path = Path.cwd()
+    archive_log_path = script_path / "archive.log"
+
+    return archive_log_path
 
 
 def extract_data_from_ytdl_dict(info_dict):
@@ -109,17 +121,22 @@ def is_tool(name):
     return which(name) is not None
 
 
-def generate_file_name(data, show_mode):
+def generate_file_name(data, show_mode) -> str:
     episode_number = get_episode_number(data["episode_number"])
     season_number = get_season_name(data["season_number"])
+    if data["episode_type"] == "bonus_feature":
+        proper_id = f"{data['id_numerical']}-bonus"
+    else:
+        proper_id = f"{data['id_numerical']}"
+
     if show_mode is True:
         if data["is_first_content"] is True:
-            return f"{data['original_air_date']} - ☆ {season_number}{episode_number} - {data['title']} ({data['id_numerical']})"
+            return f"{data['original_air_date']} - ☆ {season_number}{episode_number} - {data['title']} ({proper_id})"
         else:
-            return f"{data['original_air_date']} - {season_number}{episode_number} - {data['title']} ({data['id_numerical']})"
+            return f"{data['original_air_date']} - {season_number}{episode_number} - {data['title']} ({proper_id})"
     else:
         safe_title = get_valid_filename(data["title"])
-        return f"{data['original_air_date']}_{safe_title}_[{data['id_numerical']}]"
+        return f"{data['original_air_date']}_{safe_title}_[{proper_id}]"
 
 
 def get_season_name(season):
@@ -134,8 +151,13 @@ def get_episode_number(episode):
     return f"E{formatted_string}"
 
 
-def generate_episode_container_name(data):
-    return f"{data['original_air_date']} - {data['id_numerical']}"
+def generate_episode_container_name(data) -> str:
+    if data["episode_type"] == "bonus_feature":
+        proper_id = f"{data['id_numerical']}-bonus"
+    else:
+        proper_id = f"{data['id_numerical']}"
+
+    return f"{data['original_air_date']} - {proper_id}"
 
 
 def generate_basic_file_name(data):
@@ -143,118 +165,140 @@ def generate_basic_file_name(data):
 
 
 def download_thumbnail_fallback(episode_data, show_mode):
-    # Ensure the download location exists
-    dl_location = get_download_location(show_mode)
-    os.makedirs(dl_location, exist_ok=True)
-
-    # Generate the file name and create the directory
-    file_name = generate_file_name(episode_data, show_mode)
-    if show_mode is True:
-        file_directory = os.path.join(
-            dl_location,
-            episode_data["channel_title"],
-            episode_data["show_title"],
-            get_season_name(episode_data["season_number"]),
-            generate_episode_container_name(episode_data),
-        )
-    else:
-        safe_channel_name = get_valid_filename(episode_data["channel_title"])
-        safe_show_name = get_valid_filename(episode_data["show_title"])
-        file_directory = os.path.join(
-            dl_location, safe_channel_name, safe_show_name, file_name
-        )
-
-    file_directory = os.path.join(dl_location, episode_data["show_title"], file_name)
-    thumbnail_url = episode_data["large_thumb_alt"]
-    file_extension = os.path.splitext(thumbnail_url)[1]
-
-    file_path = os.path.join(file_directory, f"{file_name}{file_extension}")
-
-    # Attempt to download
-    s = requests.Session()
-    s.mount(thumbnail_url, HTTPAdapter(max_retries=5))
-
+    print("Attemping to download HQ thumbnail... (Fallback)")
     try:
-        response = s.get(thumbnail_url)
-        if response.status_code == 200:
-            with open(file_path, "wb") as f:
-                f.write(response.content)
-            print(f"Large Thumbnail downloaded to: {file_path}")
-            return True
+        # Ensure the download location exists
+        dl_path = Path(get_download_location(show_mode))
+
+        # Generate the file name and create the directory
+        file_name = generate_file_name(episode_data, show_mode)
+        if show_mode is True:
+            file_directory = (
+                dl_path
+                / episode_data["channel_title"]
+                / episode_data["show_title"]
+                / get_season_name(episode_data["season_number"])
+                / generate_episode_container_name(episode_data)
+            )
         else:
-            print(f"Failed to download thumbnail from: {thumbnail_url}")
-    except Exception as e:
-        print(
-            f"An error occurred: {e}. Please note this episodeId: {episode_data['id_numerical']}"
-        )
+            safe_channel_name = get_valid_filename(episode_data["channel_title"])
+            safe_show_name = get_valid_filename(episode_data["show_title"])
+            file_directory = dl_path / safe_channel_name / safe_show_name / file_name
+
+        file_directory = dl_path / episode_data["show_title"] / file_name
+        thumbnail_url = episode_data["large_thumb_alt"]
+        file_extension = os.path.splitext(thumbnail_url)[1]
+        file_path = file_directory / f"{file_name}{file_extension}"
+
+        # Attempt to download
+        s = requests.Session()
+        s.mount(thumbnail_url, HTTPAdapter(max_retries=5))
+
+        try:
+            response = s.get(thumbnail_url)
+            if response.status_code == 200:
+                file_directory.mkdir(parents=True, exist_ok=True)
+                with open(file_path, "wb") as f:
+                    f.write(response.content)
+                print(f"Large Thumbnail Fallback downloaded to: {file_path}")
+                logging.info(f"Large Thumbnail Fallback downloaded to: {file_path}")
+                return True
+            else:
+                logging.info(
+                    f"Thumbnail Fallback: Failed to download thumbnail from: {thumbnail_url}"
+                )
+                print(f"Failed to download thumbnail from: {thumbnail_url}")
+        except RequestException as e:
+            print(
+                f"An error occurred: {e}. Please note this episodeId: {episode_data['id_numerical']}"
+            )
+            logging.info(
+                f"An error occurred: {e}. Please note this episodeId: {episode_data['id_numerical']}"
+            )
+
+    except (FileNotFoundError, OSError) as err:
+        logging.warning(f"Error occurred: {err}")
+        return False
     return False
 
 
 def download_thumbnail(thumbnail_url, episode_data, show_mode):
-    # Ensure the download location exists
-    dl_location = get_download_location(show_mode)
-    os.makedirs(dl_location, exist_ok=True)
-
-    # Generate the file name and create the directory
-    file_name = generate_file_name(episode_data, show_mode)
-    if show_mode is True:
-        file_directory = os.path.join(
-            dl_location,
-            episode_data["channel_title"],
-            episode_data["show_title"],
-            get_season_name(episode_data["season_number"]),
-            generate_episode_container_name(episode_data),
-        )
-    else:
-        safe_channel_name = get_valid_filename(episode_data["channel_title"])
-        safe_show_name = get_valid_filename(episode_data["show_title"])
-        file_directory = os.path.join(
-            dl_location, safe_channel_name, safe_show_name, file_name
-        )
-    os.makedirs(file_directory, exist_ok=True)
-
-    if thumbnail_url is not None:  # from yt-dlp data
-        file_extension = os.path.splitext(thumbnail_url)[1]
-    else:  # from api data
-        logging.warning("Downloading thumbnail using fallback method")
-        thumbnail_url = episode_data["large_thumb"]
-        file_extension = os.path.splitext(thumbnail_url)[1]
-
-    file_path = os.path.join(file_directory, f"{file_name}{file_extension}")
-
-    # Attempt to download
-    s = requests.Session()
-    s.mount(thumbnail_url, HTTPAdapter(max_retries=5))
-
+    print("Attemping to download HQ thumbnail...")
     try:
-        # TEST
-        response = s.get(thumbnail_url)
-        if response.status_code == 200:
-            with open(file_path, "wb") as f:
-                f.write(response.content)
-            print(f"Large Thumbnail downloaded to: {file_path}")
-            return True
+        # Ensure the download location exists
+        dl_path = Path(get_download_location(show_mode))
+        dl_path.mkdir(parents=True, exist_ok=True)
+
+        # Generate the file name and create the directory
+        file_name = generate_file_name(episode_data, show_mode)
+        if show_mode is True:
+            file_directory = (
+                dl_path
+                / episode_data["channel_title"]
+                / episode_data["show_title"]
+                / get_season_name(episode_data["season_number"])
+                / generate_episode_container_name(episode_data)
+            )
         else:
-            print(f"Failed to download thumbnail from: {thumbnail_url}")
-            alt_thumb_status = download_thumbnail_fallback(episode_data, show_mode)
-    except MaxRetryError as e:
-        print(f"MaxRetryError occurred: {e}")
-        if hasattr(e, "pool"):
-            e.pool.close()
-        print("Closed connections to avoid further issues.")
-        if episode_data["large_thumbnail_alt"]:
-            alt_thumb_status = download_thumbnail_fallback(episode_data, show_mode)
-    except NewConnectionError as e:
-        print(f"NewConnectionError occurred: {e}")
-        if episode_data["large_thumbnail_alt"]:
-            alt_thumb_status = download_thumbnail_fallback(episode_data, show_mode)
+            safe_channel_name = get_valid_filename(episode_data["channel_title"])
+            safe_show_name = get_valid_filename(episode_data["show_title"])
+            file_directory = dl_path / safe_channel_name / safe_show_name / file_name
 
-    except Exception as e:
-        print(f"An error occurred: {e}")
-        if episode_data["large_thumbnail_alt"]:
-            alt_thumb_status = download_thumbnail_fallback(episode_data, show_mode)
+        file_directory.mkdir(parents=True, exist_ok=True)
 
-    return alt_thumb_status
+        if thumbnail_url is not None:  # from yt-dlp data
+            file_extension = os.path.splitext(thumbnail_url)[1]
+        else:  # from api data
+            logging.warning("Downloading thumbnail using RT API method")
+            thumbnail_url = episode_data["large_thumb"]
+            file_extension = os.path.splitext(thumbnail_url)[1]
+
+        file_path = file_directory / f"{file_name}{file_extension}"
+
+        # Attempt to download
+        s = requests.Session()
+        s.mount(thumbnail_url, HTTPAdapter(max_retries=5))
+
+        try:
+            response = s.get(thumbnail_url)
+            if response.status_code == 200:
+                with open(file_path, "wb") as f:
+                    f.write(response.content)
+                print(f"Large Thumbnail downloaded to: {file_path}")
+                logging.info(f"Large Thumbnail downloaded to: {file_path}")
+                return True
+            else:
+                print(f"Failed to download thumbnail from: {thumbnail_url}")
+                logging.info(
+                    f"An error occurred: {e}. Please note this episodeId: {episode_data['id_numerical']}"
+                )
+                alt_thumb_status = download_thumbnail_fallback(episode_data, show_mode)
+        except MaxRetryError as e:
+            print(f"MaxRetryError occurred: {e}")
+            if hasattr(e, "pool"):
+                e.pool.close()
+            print("Closed connections to avoid further issues.")
+            logging.warning(f"MaxRetryError occurred: {e}")
+
+            if episode_data["large_thumbnail_alt"]:
+                alt_thumb_status = download_thumbnail_fallback(episode_data, show_mode)
+        except NewConnectionError as e:
+            print(f"NewConnectionError occurred: {e}")
+            logging.warning(f"NewConnectionError occurred: {e}")
+            if episode_data["large_thumbnail_alt"]:
+                alt_thumb_status = download_thumbnail_fallback(episode_data, show_mode)
+
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            logging.critical(f"An error occurred: {e}")
+            if episode_data["large_thumbnail_alt"]:
+                alt_thumb_status = download_thumbnail_fallback(episode_data, show_mode)
+
+        return alt_thumb_status
+
+    except (FileNotFoundError, OSError) as err:
+        logging.warning(f"Error occurred: {err}")
+        return False
 
 
 def downloader(
@@ -303,9 +347,10 @@ def downloader(
         )
     except (yt_dlp.utils.DownloadError, yt_dlp.utils.ExtractorError) as err:
         print(err)
+        print("Are you sure its a valid link?")
         print("Are you sure you are logged in?")
         print("If you are, are you a FIRST member?")
-        exit()
+        logging.warning(f"{err} yt-dlp parser error for {vod_url}")
     yt_dlp_dict_data = extract_data_from_ytdl_dict(info_dict=info_dict)
 
     if episode_data is False:
@@ -314,9 +359,27 @@ def downloader(
     else:
         file_name = generate_file_name(episode_data, show_mode)
         dl_location = get_download_location(show_mode)
-        thumbnail_success = download_thumbnail(
-            yt_dlp_dict_data["large_thumbnail_url_ytdl"], episode_data, show_mode
-        )
+        try:
+            if yt_dlp_dict_data["large_thumbnail_url_ytdl"]:
+                thumbnail_success = download_thumbnail(
+                    yt_dlp_dict_data["large_thumbnail_url_ytdl"],
+                    episode_data,
+                    show_mode,
+                )
+            else:
+                thumbnail_success = download_thumbnail(
+                    episode_data["large_thumb"],
+                    episode_data,
+                    show_mode,
+                )
+
+        except FileNotFoundError as fnf_err:
+            print(f"Error with file location or sth {fnf_err}")
+            logging.warning(f"Error with file location error {fnf_err}")
+        except:
+            thumbnail_success = False
+            logging.warning("thumbnail_success error")
+
         if thumbnail_success is not True:
             video_options["writethumbnail"] = True
 
@@ -325,35 +388,36 @@ def downloader(
     # if we are in show mode, episode folder will be inside a show folder
     if show_mode is True:
         if episode_data is not False:
-            full_name_with_dir = os.path.join(
-                dl_location,
-                episode_data["channel_title"],
-                episode_data["show_title"],
-                get_season_name(episode_data["season_number"]),
-                generate_episode_container_name(episode_data),
-                name_with_extension,
+            full_name_with_dir = (
+                dl_location / episode_data["channel_title"] / episode_data["show_title"]
             )
+            full_name_with_dir /= get_season_name(episode_data["season_number"])
+            full_name_with_dir /= generate_episode_container_name(episode_data)
+            full_name_with_dir /= name_with_extension
     else:
         logging.warning("show mode True but has Fallback data")
         safe_channel_name = get_valid_filename(episode_data["channel_title"])
         safe_show_name = get_valid_filename(episode_data["show_title"])
-        full_name_with_dir = os.path.join(
-            dl_location,
-            safe_channel_name,
-            safe_show_name,
-            file_name,
-            name_with_extension,
+        full_name_with_dir = (
+            dl_location
+            / safe_channel_name
+            / safe_show_name
+            / file_name
+            / name_with_extension
         )
 
-    video_options["outtmpl"] = full_name_with_dir
+    video_options["outtmpl"] = str(full_name_with_dir)
 
     # pass off to yt-dlp for downloading
     print("Starting download: ", full_name_with_dir)
     try:
         yt_dlp.YoutubeDL(video_options).download(vod_url)
+        logging.info(
+            f"{episode_data['id_numerical']} Downloaded successfully {vod_url}"
+        )
     except:
-        logging.warning(
-            f"Error with yt_dlp downloading. ID: {episode_data['id_numerical']}"
+        logging.critical(
+            f"{episode_data['id_numerical']} Error with yt_dlp downloading for: {vod_url}"
         )
 
 
@@ -414,6 +478,7 @@ def get_episode_data_from_api(url):
                 "large_thumb": large_thumb,
                 "season_number": season,
                 "episode_number": episode_number,
+                "episode_type": episode_type,
             }
         else:
             # write-fallback code via ytdlp info dict
@@ -467,6 +532,7 @@ def get_episode_data_from_rt_api(url):
                 "large_thumb_alt": large_thumb_alt,
                 "season_number": season,
                 "episode_number": episode_number,
+                "episode_type": episode_type,
             }
         else:
             # go to fallback data fetch via my api
@@ -478,6 +544,7 @@ def show_stuff(username, password, vod_url, concurrent_fragments, show_mode):
         print("ffmpeg not installed, go do that")
         exit()
     api_url = get_rt_api_url(url=vod_url)
+    episode_data = None
     episode_data = get_episode_data_from_rt_api(api_url)
     if episode_data is False:
         episode_data = get_episode_data_from_api(vod_url)

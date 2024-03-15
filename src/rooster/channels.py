@@ -58,7 +58,7 @@ channels = [
         "value": "6ce10ccb-f945-4b21-b157-5c5619bf1de3",
     },
     {
-        "name": "Red vs. Blue ",
+        "name": "Red vs. Blue",
         "slug": "red-vs-blue-universe",
         "uuid": "5167de51-5719-4c1a-b9c5-ed727ef8f3a3",
     },
@@ -78,7 +78,7 @@ channels = [
         "uuid": "92f780eb-ebfe-4bf5-a3b5-c6ad5460a5f1",
     },
     {
-        "name": "Tales From the Stinky Dragon ",
+        "name": "Tales From the Stinky Dragon",
         "slug": "tales-from-the-stinky-dragon",
         "uuid": "44ef6a57-e965-40e6-942b-c28d7dec727b",
     },
@@ -88,5 +88,5 @@ channels = [
 def get_channel_name_from_id(channel_id):
     for channel in channels:
         if "uuid" in channel and channel["uuid"] == channel_id:
-            return channel["name"]
+            return channel["name"].strip()
     return None
