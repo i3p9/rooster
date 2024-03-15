@@ -68,9 +68,7 @@ def get_archive_log_filename():
 
 
 def exists_in_archive(episode_data):
-    id_episode = str(episode_data["id_numerical"])
-    if episode_data["season_number"] == "99":
-        id_episode += "-bonus"  # Handle bonus ids
+    id_episode = str(episode_data["id"])
     archive = get_archive_log_filename()
     if os.path.isfile(archive):
         with open(archive, "r") as f:
@@ -95,7 +93,7 @@ def extract_data_from_ytdl_dict(info_dict):
             break
 
     return {
-        "id_numerical": episode_id,
+        "id": episode_id,
         "title": episode_title,
         "channe_title": channe_title,
         "is_first_content": is_first_content,
@@ -138,19 +136,15 @@ def is_tool(name):
 def generate_file_name(data, show_mode) -> str:
     episode_number = get_episode_number(data["episode_number"])
     season_number = get_season_name(data["season_number"])
-    if data["episode_type"] == "bonus_feature":
-        proper_id = f"{data['id_numerical']}-bonus"
-    else:
-        proper_id = f"{data['id_numerical']}"
 
     if show_mode is True:
         if data["is_first_content"] is True:
-            return f"{data['original_air_date']} - ☆ {season_number}{episode_number} - {data['title']} ({proper_id})"
+            return f"{data['original_air_date']} - ☆ {season_number}{episode_number} - {data['title']} ({data['id']})"
         else:
-            return f"{data['original_air_date']} - {season_number}{episode_number} - {data['title']} ({proper_id})"
+            return f"{data['original_air_date']} - {season_number}{episode_number} - {data['title']} ({data['id']})"
     else:
         safe_title = get_valid_filename(data["title"])
-        return f"{data['original_air_date']}_{safe_title}_[{proper_id}]"
+        return f"{data['original_air_date']}_{safe_title}_[{data['id']}]"
 
 
 def get_season_name(season):
@@ -166,16 +160,11 @@ def get_episode_number(episode):
 
 
 def generate_episode_container_name(data) -> str:
-    if data["episode_type"] == "bonus_feature":
-        proper_id = f"{data['id_numerical']}-bonus"
-    else:
-        proper_id = f"{data['id_numerical']}"
-
-    return f"{data['original_air_date']} - {proper_id}"
+    return f"{data['original_air_date']} - {data['id']}"
 
 
 def generate_basic_file_name(data):
-    return f"{data['channel_title']} {data['title']} [{data['id_numerical']}]"
+    return f"{data['channel_title']} {data['title']} [{data['id']}]"
 
 
 def download_thumbnail_fallback(episode_data, show_mode):
@@ -224,10 +213,10 @@ def download_thumbnail_fallback(episode_data, show_mode):
                 print(f"Failed to download thumbnail from: {thumbnail_url}")
         except RequestException as e:
             print(
-                f"An error occurred: {e}. Please note this episodeId: {episode_data['id_numerical']}"
+                f"An error occurred: {e}. Please note this episodeId: {episode_data['id']}"
             )
             logging.info(
-                f"An error occurred: {e}. Please note this episodeId: {episode_data['id_numerical']}"
+                f"An error occurred: {e}. Please note this episodeId: {episode_data['id']}"
             )
 
     except (FileNotFoundError, OSError) as err:
@@ -284,7 +273,7 @@ def download_thumbnail(thumbnail_url, episode_data, show_mode):
             else:
                 print(f"Failed to download thumbnail from: {thumbnail_url}")
                 logging.info(
-                    f"An error occurred: {e}. Please note this episodeId: {episode_data['id_numerical']}"
+                    f"An error occurred: {e}. Please note this episodeId: {episode_data['id']}"
                 )
                 alt_thumb_status = download_thumbnail_fallback(episode_data, show_mode)
         except MaxRetryError as e:
@@ -427,11 +416,11 @@ def downloader(
     try:
         yt_dlp.YoutubeDL(video_options).download(vod_url)
         logging.info(
-            f"{episode_data['id_numerical']} Downloaded successfully {vod_url}"
+            f"{episode_data['id']} Downloaded successfully {vod_url}"
         )
     except:
         logging.critical(
-            f"{episode_data['id_numerical']} Error with yt_dlp downloading for: {vod_url}"
+            f"{episode_data['id']} Error with yt_dlp downloading for: {vod_url}"
         )
 
 
@@ -470,6 +459,10 @@ def get_episode_data_from_api(url):
             show_title = make_filename_safe(get_show_name_from_id(show_id))
             episode_number = attributes.get("number")
             season = attributes.get("season_number", "99")
+
+            if episode_type == "bonus_feature":
+                episode_id = f"{episode_id}-bonus"
+
             if season_id:
                 large_thumb = f"https://cdn.ffaisal.com/thumbnail/{show_id}/{season_id}/{uuid}.jpg"
             else:
@@ -483,7 +476,7 @@ def get_episode_data_from_api(url):
             channel_title = make_filename_safe(get_channel_name_from_id(channel_id))
 
             return {
-                "id_numerical": episode_id,
+                "id": episode_id,
                 "title": title,
                 "original_air_date": original_air_date,
                 "show_title": show_title,
@@ -523,6 +516,9 @@ def get_episode_data_from_rt_api(url):
             season = attributes.get("season_number", "99")
             episode_number = attributes.get("number")
 
+            if episode_type == "bonus_feature":
+                episode_id = f"{episode_id}-bonus"
+
             if season_id:
                 large_thumb_alt = f"https://cdn.ffaisal.com/thumbnail/{show_id}/{season_id}/{uuid}.jpg"
             else:
@@ -536,7 +532,7 @@ def get_episode_data_from_rt_api(url):
             channel_title = make_filename_safe(get_channel_name_from_id(channel_id))
 
             return {
-                "id_numerical": episode_id,
+                "id": episode_id,
                 "title": title,
                 "original_air_date": original_air_date,
                 "show_title": show_title,
@@ -561,7 +557,7 @@ def show_stuff(username, password, vod_url, concurrent_fragments, show_mode):
     episode_data = None
     episode_data = get_episode_data_from_rt_api(api_url)
     if exists_in_archive(episode_data):
-        print(f'{episode_data["id_numerical"]}: {episode_data["title"]} already recorded in archive')
+        print(f'{episode_data["id"]}: {episode_data["title"]} already recorded in archive')
     else:
         if episode_data is False:
             episode_data = get_episode_data_from_api(vod_url)
