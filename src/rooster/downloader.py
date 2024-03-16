@@ -51,6 +51,11 @@ def exists_in_downloaded_log(slug):
         return False
 
 
+log_dir = Path.cwd() / "logs"
+if not os.path.exists(log_dir):
+    os.makedirs(log_dir)
+
+
 logging.basicConfig(
     filename="logs/rooster.log",
     filemode="a",
@@ -273,11 +278,14 @@ def generate_ia_meta(episode_data):
 
 def has_video_and_image(directory) -> bool:
     mp4_files = list(directory.glob("*.mp4"))
-    img_files = list(directory.glob("*.jpg")) + list(directory.glob("*.png"))
-    if mp4_files and img_files:
-        return True
-    else:
-        return False
+    jpg_files = list(directory.glob("*.jpg"))
+    png_files = list(directory.glob("*.png"))
+    gif_files = list(directory.glob("*.gif"))
+    if mp4_files:
+        if jpg_files or png_files or gif_files:
+            return True
+
+    return False
 
 
 def check_if_files_are_ready(directory) -> bool:
@@ -665,7 +673,9 @@ def downloader(
             f"{episode_data['id_numerical']} Downloaded successfully {vod_url}"
         )
 
-        if has_video_and_image():  # checks for mp4 and jpg/png existance
+        if has_video_and_image(
+            full_name_with_dir.parent
+        ):  # checks for mp4 and jpg/png existance
             print("Has Image/Video file, saving to downloaded log")
             save_successful_downloaded_slugs(slug=episode_data["slug"])
 
@@ -852,7 +862,7 @@ def show_stuff(
     # check manually
     if fast_check:
         if exists_in_downloaded_log(vod_url.split("/")[-1]):
-            print(f"{vod_url}: already recorded in downloaded log")
+            print(f"{vod_url}: URL already recorded in downloaded log")
             exit()
     api_url = get_rt_api_url(url=vod_url)
     episode_data = None
