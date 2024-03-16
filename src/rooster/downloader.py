@@ -34,8 +34,25 @@ def get_download_location(show_mode: bool, upload_to_ia: bool) -> Path:
     return download_path
 
 
+def save_successful_downloaded_slugs(slug):
+    downlaoded_log_path = get_downloaded_log_filename()
+    with open(downlaoded_log_path, "a") as log_file:
+        log_file.write(slug + "\n")
+        logging(f"Logged slug {slug} successfully to downloaded.log")
+
+
+def exists_in_downloaded_log(slug):
+    downlaoded_log_path = get_downloaded_log_filename()
+    if os.path.isfile(downlaoded_log_path):
+        with open(downlaoded_log_path, "r") as f:
+            for line in f:
+                if line.rstrip() == slug:
+                    return True
+        return False
+
+
 logging.basicConfig(
-    filename="rooster.log",
+    filename="logs/rooster.log",
     filemode="a",
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     level=logging.DEBUG,
@@ -57,6 +74,20 @@ def get_high_quality_thumbnail_link(images):
     return False
 
 
+def get_downloaded_log_filename():
+    """
+    Gets the path to the downlaoded log file using pathlib.
+    This is a manual logging process to find dupe much quicker
+    Returns:
+        Path: The path to the archive log file.
+    """
+
+    script_path = Path.cwd()
+    archive_log_path = script_path / "logs" / "downloaded.log"
+
+    return archive_log_path
+
+
 def get_archive_log_filename():
     """
     Gets the path to the archive log file using pathlib.
@@ -65,7 +96,7 @@ def get_archive_log_filename():
     """
 
     script_path = Path.cwd()
-    archive_log_path = script_path / "archive.log"
+    archive_log_path = script_path / "logs" / "archive.log"
 
     return archive_log_path
 
@@ -238,6 +269,15 @@ def generate_ia_meta(episode_data):
         scanner="Rooster - Roosterteeth Website Mirror 0.1.9",
     )
     return metadata
+
+
+def has_video_and_image(directory) -> bool:
+    mp4_files = list(directory.glob("*.mp4"))
+    img_files = list(directory.glob("*.jpg")) + list(directory.glob("*.png"))
+    if mp4_files and img_files:
+        return True
+    else:
+        return False
 
 
 def check_if_files_are_ready(directory) -> bool:
@@ -624,8 +664,14 @@ def downloader(
         logging.info(
             f"{episode_data['id_numerical']} Downloaded successfully {vod_url}"
         )
+
+        if has_video_and_image():  # checks for mp4 and jpg/png existance
+            print("Has Image/Video file, saving to downloaded log")
+            save_successful_downloaded_slugs(slug=episode_data["slug"])
+
         # check whether every file has downloaded. specially mp4
         # upload_ia
+        # SAVE SLUG to a new file for checking
         if upload_to_ia:
             container_dir = full_name_with_dir.parent
             ready_for_upload = check_if_files_are_ready(directory=container_dir)
@@ -792,11 +838,22 @@ def get_episode_data_from_rt_api(url):
 
 
 def show_stuff(
-    username, password, vod_url, concurrent_fragments, show_mode, upload_to_ia
+    username,
+    password,
+    vod_url,
+    concurrent_fragments,
+    show_mode,
+    upload_to_ia,
+    fast_check,
 ):
     if not is_tool("ffmpeg"):
         print("ffmpeg not installed, go do that")
         exit()
+    # check manually
+    if fast_check:
+        if exists_in_downloaded_log(vod_url.split("/")[-1]):
+            print(f"{vod_url}: already recorded in downloaded log")
+            exit()
     api_url = get_rt_api_url(url=vod_url)
     episode_data = None
     episode_data = get_episode_data_from_rt_api(api_url)

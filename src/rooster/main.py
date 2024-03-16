@@ -33,7 +33,13 @@ logging.basicConfig(
 
 
 def process_links_from_file(
-    username, password, filename, concurrent_fragments, show_mode, upload_to_ia
+    username,
+    password,
+    filename,
+    concurrent_fragments,
+    show_mode,
+    upload_to_ia,
+    fast_check,
 ):
     with open(filename, "r") as file:
         links = file.readlines()
@@ -50,6 +56,7 @@ def process_links_from_file(
                 concurrent_fragments,
                 show_mode,
                 upload_to_ia,
+                fast_check,
             )
         except Exception as e:
             # Log the exception
@@ -67,6 +74,7 @@ def process_links_from_list(
     show_mode,
     input_value,
     upload_to_ia,
+    fast_check,
 ):
     num_links = len(episode_links)
     for index, episode in enumerate(episode_links):
@@ -79,6 +87,7 @@ def process_links_from_list(
                 concurrent_fragments,
                 show_mode,
                 upload_to_ia,
+                fast_check,
             )
         except Exception as e:
             # Log the exception
@@ -102,8 +111,17 @@ def main():
         help="Number of concurrent fragments (default is 10)",
     )
     group = parser.add_mutually_exclusive_group()
-    group.add_argument("--show", action="store_true", help="Flag to show something")
-    group.add_argument("--ia", action="store_true", help="Upload to IA?")
+    group.add_argument(
+        "--show", action="store_true", help="Download in a Predefied Show formatting"
+    )
+    group.add_argument(
+        "--ia", action="store_true", help="Upload to IA and delete uploaded file"
+    )
+    parser.add_argument(
+        "--fast-check",
+        action="store_true",
+        help="Enable Fast check for already downlaoded links",
+    )
 
     parser.add_argument("input", help="URL or file containing list of links")
 
@@ -117,6 +135,7 @@ def main():
     concurrent_fragments = args.concurrent_fragments
     show_flag = args.show
     upload_to_ia = args.ia
+    fast_check = args.fast_check
 
     if show_flag:
         show_mode = True
@@ -131,6 +150,7 @@ def main():
             concurrent_fragments,
             show_mode,
             upload_to_ia,
+            fast_check,
         )
     else:
         if validators.url(input_value):
@@ -147,6 +167,7 @@ def main():
                         show_mode,
                         input_value,
                         upload_to_ia,
+                        fast_check,
                     )
                 else:
                     print(
@@ -163,6 +184,7 @@ def main():
                     concurrent_fragments,
                     show_mode,
                     upload_to_ia,
+                    fast_check,
                 )
             else:
                 print("Unsupported RT URL. Only supports Series and Episodes")
