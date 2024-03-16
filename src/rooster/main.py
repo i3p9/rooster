@@ -3,6 +3,8 @@ from .downloader import show_stuff
 import argparse
 import logging
 import os
+import validators
+from .parser import RoosterTeethParser
 
 
 def get_download_location(show_mode):
@@ -51,6 +53,21 @@ def process_links_from_file(
                 f"Error occurred while processing link {index}: {line.strip()}"
             )
 
+def process_links_from_list(username, password, episode_links, concurrent_fragments, show_mode,input_value):
+    num_links = len(episode_links)
+    for index,episode in enumerate(episode_links):
+        print(f"Downloading link {index+1} of {num_links}: {episode}")
+        try:
+            show_stuff(
+                username, password, episode, concurrent_fragments, show_mode
+            )
+        except Exception as e:
+            # Log the exception
+            print(f"Error occurred while processing link {index+1}: {episode} | Input : {input_value}")
+            logging.critical(
+                f"Error occurred while processing link {index+1}: {episode} | Input: {input_value}"
+            )
+
 
 def main():
     parser = argparse.ArgumentParser(description="Process command line arguments")
@@ -85,8 +102,27 @@ def main():
             username, password, input_value, concurrent_fragments, show_mode
         )
     else:
-        show_stuff(username, password, input_value, concurrent_fragments, show_mode)
+        if validators.url(input_value):
+            url_parts = input_value.split("/")
+            if 'roosterteeth.com' in url_parts and 'series' in url_parts:
+                parser = RoosterTeethParser()
+                episode_links = parser.get_episode_links(input_value)
+                if episode_links is not None:
+                    process_links_from_list(username, password, episode_links, concurrent_fragments, show_mode,input_value)
+                else:
+                    print(f"something went wrong with parsing: {input_value}. Try again or check your links")
+                    logging.critical(f"parsing failed for: {input_value}")
+                    exit()
 
+            elif 'roosterteeth.com' in url_parts and 'watch' in url_parts:
+                show_stuff(username, password, input_value, concurrent_fragments, show_mode)
+            else:
+                print("Unsupported RT URL. Only supports Series and Episodes")
+                exit()
+        else:
+            print(f"invalid url: {input_value}. Exiting.")
+            logging.warning(f"invalid url: {input_value}. Exiting.")
+            exit()
 
 if __name__ == "__main__":
     raise SystemExit(main())
