@@ -871,7 +871,7 @@ def show_stuff(
     if fast_check:
         if exists_in_downloaded_log(vod_url.split("/")[-1]):
             print(f"{vod_url}: URL already recorded in downloaded log")
-            exit()
+            return
     api_url = get_rt_api_url(url=vod_url)
     episode_data = None
     episode_data = get_episode_data_from_rt_api(api_url)
