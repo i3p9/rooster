@@ -693,13 +693,12 @@ def downloader(
             ready_for_upload = check_if_files_are_ready(directory=container_dir)
 
             if ready_for_upload:
-                print("MOCK: UPLOAD IS DISABLED")
                 print("Directory contains .mp4 files. Uploading")
-                # upload_ia(
-                #     directory_location=container_dir,
-                #     md=ia_metadata,
-                #     episoda_data=episode_data,
-                # )
+                upload_ia(
+                    directory_location=container_dir,
+                    md=ia_metadata,
+                    episoda_data=episode_data,
+                )
                 print(f"uploaded, this dir will be removed: {container_dir}")
 
             else:
@@ -999,7 +998,7 @@ def upload_ia(directory_location, md, episoda_data):
     )
 
     # print(r[0])
-    # r.raise_for_status()
+    r.raise_for_status()
 
     # if r[0].status_code == 200:
     #     print(f"Uplaoded Successfully at https://archive.org/details/{identifier_ia}")
