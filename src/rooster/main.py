@@ -40,6 +40,7 @@ def process_links_from_file(
     show_mode,
     upload_to_ia,
     fast_check,
+    use_aria,
 ):
     with open(filename, "r") as file:
         links = file.readlines()
@@ -57,6 +58,7 @@ def process_links_from_file(
                 show_mode,
                 upload_to_ia,
                 fast_check,
+                use_aria,
             )
         except Exception as e:
             # Log the exception
@@ -75,6 +77,7 @@ def process_links_from_list(
     input_value,
     upload_to_ia,
     fast_check,
+    use_aria,
 ):
     num_links = len(episode_links)
     for index, episode in enumerate(episode_links):
@@ -88,6 +91,7 @@ def process_links_from_list(
                 show_mode,
                 upload_to_ia,
                 fast_check,
+                use_aria,
             )
         except Exception as e:
             # Log the exception
@@ -122,6 +126,11 @@ def main():
         action="store_true",
         help="Enable Fast check for already downlaoded links",
     )
+    parser.add_argument(
+        "--use-aria",
+        action="store_true",
+        help="Use aria2c as downloader if it exists in system",
+    )
 
     parser.add_argument("input", help="URL or file containing list of links")
 
@@ -136,6 +145,7 @@ def main():
     show_flag = args.show
     upload_to_ia = args.ia
     fast_check = args.fast_check
+    use_aria = args.use_aria
 
     if show_flag:
         show_mode = True
@@ -151,6 +161,7 @@ def main():
             show_mode,
             upload_to_ia,
             fast_check,
+            use_aria,
         )
     else:
         if validators.url(input_value):
@@ -168,6 +179,7 @@ def main():
                         input_value,
                         upload_to_ia,
                         fast_check,
+                        use_aria,
                     )
                 else:
                     print(
@@ -185,6 +197,7 @@ def main():
                     show_mode,
                     upload_to_ia,
                     fast_check,
+                    use_aria,
                 )
             else:
                 print("Unsupported RT URL. Only supports Series and Episodes")

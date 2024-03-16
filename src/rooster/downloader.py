@@ -36,9 +36,11 @@ def get_download_location(show_mode: bool, upload_to_ia: bool) -> Path:
 
 def save_successful_downloaded_slugs(slug):
     downlaoded_log_path = get_downloaded_log_filename()
-    with open(downlaoded_log_path, "a") as log_file:
-        log_file.write(slug + "\n")
-        logging(f"Logged slug {slug} successfully to downloaded.log")
+    try:
+        with open(downlaoded_log_path, "a") as log_file:
+            log_file.write(slug + "\n")
+    except Exception as ex:
+        logging.critical(f"An error occurred while saving slug {slug} - {e}")
 
 
 def exists_in_downloaded_log(slug):
@@ -405,7 +407,6 @@ def download_thumbnail_fallback(episode_data, show_mode, upload_to_ia):
                 with open(file_path, "wb") as f:
                     f.write(response.content)
                 print(f"Large Thumbnail Fallback downloaded to: {file_path}")
-                logging.info(f"Large Thumbnail Fallback downloaded to: {file_path}")
                 return True
             else:
                 logging.info(
@@ -457,7 +458,6 @@ def download_thumbnail(thumbnail_url, episode_data, show_mode, upload_to_ia):
         if thumbnail_url is not None:  # from yt-dlp data
             file_extension = os.path.splitext(thumbnail_url)[1]
         else:  # from api data
-            logging.warning("Downloading thumbnail using RT API method")
             thumbnail_url = episode_data["large_thumb"]
             file_extension = os.path.splitext(thumbnail_url)[1]
 
@@ -477,7 +477,6 @@ def download_thumbnail(thumbnail_url, episode_data, show_mode, upload_to_ia):
                 with open(file_path, "wb") as f:
                     f.write(response.content)
                 print(f"Large Thumbnail downloaded to: {file_path}")
-                logging.info(f"Large Thumbnail downloaded to: {file_path}")
                 return True
             else:
                 print(f"Failed to download thumbnail from: {thumbnail_url}")
@@ -553,6 +552,7 @@ def downloader(
     concurrent_fragments,
     show_mode,
     upload_to_ia,
+    use_aria,
 ):
     video_options = {
         "username": username,
@@ -577,14 +577,14 @@ def downloader(
     }
 
     ## use aria2c if it exists in system
-    if is_tool("aria2cx"):
-        video_options["external_downloader"] = "aria2c"
-        video_options["external_downloader_args"] = [
-            "-j 16",
-            " -x 16",
-            "-s 16",
-            " -k 1M",
-        ]
+    if is_tool("aria2c"):
+        if use_aria is True:
+            video_options["external_downloader"] = "aria2c"
+            video_options["external_downloader_args"] = [
+                "-j 16",
+                " -x 16",
+                "-s 16",
+            ]
     else:
         video_options["concurrent_fragment_downloads"] = int(concurrent_fragments)
 
@@ -677,9 +677,7 @@ def downloader(
     print("Starting download: ", full_name_with_dir)
     try:
         yt_dlp.YoutubeDL(video_options).download(vod_url)
-        logging.info(
-            f"{episode_data['id_numerical']} Downloaded successfully {vod_url}"
-        )
+        print(f"{episode_data['id_numerical']} Downloaded successfully {vod_url}")
 
         if has_video_and_image(
             full_name_with_dir.parent
@@ -739,120 +737,177 @@ def get_api_url(url):
 
 
 def get_episode_data_from_api(url):
-    print("Getting API Data via Alt Means")
-    base_url = get_api_url(url)
-    response = requests.get(base_url)
-    if response.status_code == 200:
-        episode_data = response.json().get("documents", [])
-        if episode_data:
-            episode_obj = episode_data[0]
-            episode_id = episode_obj.get("id")
-            uuid = episode_obj.get("uuid")
-            episode_type = episode_obj.get("type")
-            attributes = episode_obj.get("attributes", {})
-            title = make_filename_safe(attributes.get("title"))
-            channel_id = attributes.get("channel_id")
-            season_id = attributes.get("season_id")
-            original_air_date_full = attributes.get("original_air_date", "")
-            is_first_content = attributes.get("is_sponsors_only")
-            show_id = attributes.get("show_id")
-            parent_slug = attributes.get("parent_content_slug", "")
-            show_title = make_filename_safe(get_show_name_from_id(show_id))
-            episode_number = attributes.get("number")
-            season = attributes.get("season_number", "99")
-            if season_id:
-                large_thumb = f"https://cdn.ffaisal.com/thumbnail/{show_id}/{season_id}/{uuid}.jpg"
-            else:
-                large_thumb = f"https://cdn.ffaisal.com/thumbnail/{show_id}/bonus-content-{parent_slug}/{uuid}.jpg"
+    s = requests.Session()
+    s.mount(url, HTTPAdapter(max_retries=5))
 
-            original_air_date = (
-                original_air_date_full.split("T")[0]
-                if "T" in original_air_date_full
-                else None
-            )
-            channel_title = make_filename_safe(get_channel_name_from_id(channel_id))
-            description = attributes.get("description")
-            slug = attributes.get("slug")
-            genres = attributes.get("genres")
-
-            return {
-                "id_numerical": episode_id,
-                "title": title,
-                "original_air_date": original_air_date,
-                "show_title": show_title,
-                "is_first_content": is_first_content,
-                "channel_title": channel_title,
-                "large_thumb": large_thumb,
-                "season_number": season,
-                "episode_number": episode_number,
-                "episode_type": episode_type,
-                "description": description,
-                "slug": slug,
-                "genres": genres,
-            }
+    try:
+        response = s.get(url)
+        if response.status_code == 200:
+            episode_data = response.json().get("data", [])
         else:
-            # write-fallback code via ytdlp info dict
-            return False
+            print(f"Failed to get api data from: {url}")
+            logging.info(
+                f"An error occurred: {e}. Please note this episodeId: {episode_data['id_numerical']}"
+            )
+            return None
+    except MaxRetryError as e:
+        print(f"MaxRetryError occurred: {e}")
+        if hasattr(e, "pool"):
+            e.pool.close()
+        print("Closed connections to avoid further issues.")
+        logging.warning(f"MaxRetryError occurred: {e}")
+        return None
+    except NewConnectionError as e:
+        print(f"NewConnectionError occurred: {e}")
+        logging.warning(f"NewConnectionError occurred: {e}")
+        return None
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        logging.critical(f"An error occurred: {e}")
+        return None
+
+    episode_data = response.json().get("documents", [])
+    if episode_data:
+        episode_obj = episode_data[0]
+        episode_id = episode_obj.get("id")
+        uuid = episode_obj.get("uuid")
+        episode_type = episode_obj.get("type")
+        attributes = episode_obj.get("attributes", {})
+        title = make_filename_safe(attributes.get("title"))
+        channel_id = attributes.get("channel_id")
+        season_id = attributes.get("season_id")
+        original_air_date_full = attributes.get("original_air_date", "")
+        is_first_content = attributes.get("is_sponsors_only")
+        show_id = attributes.get("show_id")
+        parent_slug = attributes.get("parent_content_slug", "")
+        show_title = make_filename_safe(get_show_name_from_id(show_id))
+        episode_number = attributes.get("number")
+        season = attributes.get("season_number", "99")
+        if season_id:
+            large_thumb = (
+                f"https://cdn.ffaisal.com/thumbnail/{show_id}/{season_id}/{uuid}.jpg"
+            )
+        else:
+            large_thumb = f"https://cdn.ffaisal.com/thumbnail/{show_id}/bonus-content-{parent_slug}/{uuid}.jpg"
+
+        original_air_date = (
+            original_air_date_full.split("T")[0]
+            if "T" in original_air_date_full
+            else None
+        )
+        channel_title = make_filename_safe(get_channel_name_from_id(channel_id))
+        description = attributes.get("description")
+        slug = attributes.get("slug")
+        genres = attributes.get("genres")
+
+        return {
+            "id_numerical": episode_id,
+            "title": title,
+            "original_air_date": original_air_date,
+            "show_title": show_title,
+            "is_first_content": is_first_content,
+            "channel_title": channel_title,
+            "large_thumb": large_thumb,
+            "season_number": season,
+            "episode_number": episode_number,
+            "episode_type": episode_type,
+            "description": description,
+            "slug": slug,
+            "genres": genres,
+        }
+    else:
+        # write-fallback code via ytdlp info dict
+        return None
 
 
 def get_episode_data_from_rt_api(url):
-    response = requests.get(url)
-    if response.status_code == 200:
-        episode_data = response.json().get("data", [])
-        if episode_data:
-            episode_obj = episode_data[0]
-            episode_id = episode_obj.get("id")
-            uuid = episode_obj.get("uuid")
-            images = episode_obj.get("included", {}).get("images", [])
-            large_thumb = get_high_quality_thumbnail_link(images)
+    s = requests.Session()
+    s.mount(url, HTTPAdapter(max_retries=5))
 
-            episode_type = episode_obj.get("type")
-            attributes = episode_obj.get("attributes", {})
-            title = make_filename_safe(attributes.get("title"))
-            channel_id = attributes.get("channel_id")
-            original_air_date_full = attributes.get("original_air_date", "")
-            is_first_content = attributes.get("is_sponsors_only")
-            show_id = show_title = attributes.get("show_id")
-            show_title = make_filename_safe(get_show_name_from_id(show_id))
-            season_id = attributes.get("season_id")
-            parent_slug = attributes.get("parent_content_slug", "")
-            season = attributes.get("season_number", "99")
-            episode_number = attributes.get("number")
-
-            if season_id:
-                large_thumb_alt = f"https://cdn.ffaisal.com/thumbnail/{show_id}/{season_id}/{uuid}.jpg"
-            else:
-                large_thumb_alt = f"https://cdn.ffaisal.com/thumbnail/{show_id}/bonus-content-{parent_slug}/{uuid}.jpg"
-
-            original_air_date = (
-                original_air_date_full.split("T")[0]
-                if "T" in original_air_date_full
-                else None
-            )
-            channel_title = make_filename_safe(get_channel_name_from_id(channel_id))
-            description = attributes.get("description")
-            slug = attributes.get("slug")
-            genres = attributes.get("genres")
-
-            return {
-                "id_numerical": episode_id,
-                "title": title,
-                "original_air_date": original_air_date,
-                "show_title": show_title,
-                "is_first_content": is_first_content,
-                "channel_title": channel_title,
-                "large_thumb": large_thumb,
-                "large_thumb_alt": large_thumb_alt,
-                "season_number": season,
-                "episode_number": episode_number,
-                "episode_type": episode_type,
-                "description": description,
-                "slug": slug,
-                "genres": genres,
-            }
+    try:
+        response = s.get(url)
+        if response.status_code == 200:
+            episode_data = response.json().get("data", [])
         else:
-            # go to fallback data fetch via my api
-            return False
+            print(f"Failed to get api data from: {url}")
+            logging.info(
+                f"An error occurred: {e}. Please note this episodeId: {episode_data['id_numerical']}"
+            )
+            return None
+    except MaxRetryError as e:
+        print(f"MaxRetryError occurred: {e}")
+        if hasattr(e, "pool"):
+            e.pool.close()
+        print("Closed connections to avoid further issues.")
+        logging.warning(f"MaxRetryError occurred: {e}")
+        return None
+    except NewConnectionError as e:
+        print(f"NewConnectionError occurred: {e}")
+        logging.warning(f"NewConnectionError occurred: {e}")
+        return None
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        logging.critical(f"An error occurred: {e}")
+        return None
+
+    if episode_data:
+        episode_obj = episode_data[0]
+        episode_id = episode_obj.get("id")
+        uuid = episode_obj.get("uuid")
+        images = episode_obj.get("included", {}).get("images", [])
+        large_thumb = get_high_quality_thumbnail_link(images)
+
+        episode_type = episode_obj.get("type")
+        attributes = episode_obj.get("attributes", {})
+        title = make_filename_safe(attributes.get("title"))
+        channel_id = attributes.get("channel_id")
+        original_air_date_full = attributes.get("original_air_date", "")
+        is_first_content = attributes.get("is_sponsors_only")
+        show_id = show_title = attributes.get("show_id")
+        show_title = make_filename_safe(get_show_name_from_id(show_id))
+        season_id = attributes.get("season_id")
+        parent_slug = attributes.get("parent_content_slug", "")
+        season = attributes.get("season_number", "99")
+        episode_number = attributes.get("number")
+
+        if season_id:
+            large_thumb_alt = (
+                f"https://cdn.ffaisal.com/thumbnail/{show_id}/{season_id}/{uuid}.jpg"
+            )
+        else:
+            large_thumb_alt = f"https://cdn.ffaisal.com/thumbnail/{show_id}/bonus-content-{parent_slug}/{uuid}.jpg"
+
+        original_air_date = (
+            original_air_date_full.split("T")[0]
+            if "T" in original_air_date_full
+            else None
+        )
+        channel_title = make_filename_safe(get_channel_name_from_id(channel_id))
+        description = attributes.get("description")
+        slug = attributes.get("slug")
+        genres = attributes.get("genres")
+
+        return {
+            "id_numerical": episode_id,
+            "title": title,
+            "original_air_date": original_air_date,
+            "show_title": show_title,
+            "is_first_content": is_first_content,
+            "channel_title": channel_title,
+            "large_thumb": large_thumb,
+            "large_thumb_alt": large_thumb_alt,
+            "season_number": season,
+            "episode_number": episode_number,
+            "episode_type": episode_type,
+            "description": description,
+            "slug": slug,
+            "genres": genres,
+        }
+    else:
+        # go to fallback data fetch via my api
+        return None
 
 
 def show_stuff(
@@ -863,6 +918,7 @@ def show_stuff(
     show_mode,
     upload_to_ia,
     fast_check,
+    use_aria,
 ):
     if not is_tool("ffmpeg"):
         print("ffmpeg not installed, go do that")
@@ -872,38 +928,44 @@ def show_stuff(
         if exists_in_downloaded_log(vod_url.split("/")[-1]):
             print(f"{vod_url}: URL already recorded in downloaded log")
             return
+
     api_url = get_rt_api_url(url=vod_url)
     episode_data = None
     episode_data = get_episode_data_from_rt_api(api_url)
-    if exists_in_archive(episode_data):
-        print(
-            f'{episode_data["id_numerical"]}: {episode_data["title"]} already recorded in archive'
-        )
+    if episode_data is None:
+        episode_data = get_episode_data_from_api(vod_url)
+
+    if episode_data is None:
+        print("Both API Failed.. Skipping...")
     else:
-        if episode_data is False:
-            print("RT API Error. Trying Alt. Method")
-            episode_data = get_episode_data_from_api(vod_url)
-
-        if upload_to_ia:
-            item_exists, identifier = check_if_ia_item_exists(episode_data=episode_data)
-            if item_exists is True:
-                print(
-                    f"Item already exists at https://archive.org/details/{identifier}"
+        if exists_in_archive(episode_data):
+            print(
+                f'{episode_data["id_numerical"]}: {episode_data["title"]} already recorded in archive'
+            )
+        else:
+            if upload_to_ia:
+                item_exists, identifier = check_if_ia_item_exists(
+                    episode_data=episode_data
                 )
-                logging.info(
-                    f"Item already exists at https://archive.org/details/{identifier}"
-                )
-                exit()
+                if item_exists is True:
+                    print(
+                        f"Item already exists at https://archive.org/details/{identifier}"
+                    )
+                    logging.info(
+                        f"Item already exists at https://archive.org/details/{identifier}"
+                    )
+                    return
 
-        downloader(
-            username,
-            password,
-            vod_url,
-            episode_data,
-            concurrent_fragments,
-            show_mode,
-            upload_to_ia,
-        )
+            downloader(
+                username,
+                password,
+                vod_url,
+                episode_data,
+                concurrent_fragments,
+                show_mode,
+                upload_to_ia,
+                use_aria,
+            )
 
 
 def upload_ia(directory_location, md, episoda_data):
