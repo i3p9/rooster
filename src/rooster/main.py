@@ -83,10 +83,10 @@ def process_links_from_list(
         except Exception as e:
             # Log the exception
             print(
-                f"Error occurred while processing link {index+1}: {episode} | Input : {input_value}"
+                f"{e} Error occurred while processing link {index+1}: {episode} | Input : {input_value}"
             )
             logging.critical(
-                f"Error occurred while processing link {index+1}: {episode} | Input: {input_value}"
+                f"{e} Error occurred while processing link {index+1}: {episode} | Input: {input_value}"
             )
 
 
