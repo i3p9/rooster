@@ -40,7 +40,7 @@ def save_successful_downloaded_slugs(slug):
         with open(downlaoded_log_path, "a") as log_file:
             log_file.write(slug + "\n")
     except Exception as ex:
-        logging.critical(f"An error occurred while saving slug {slug} - {e}")
+        logging.critical(f"An error occurred while saving slug {slug} - {ex}")
 
 
 def exists_in_downloaded_log(slug):
@@ -933,7 +933,8 @@ def show_stuff(
     episode_data = None
     episode_data = get_episode_data_from_rt_api(api_url)
     if episode_data is None:
-        episode_data = get_episode_data_from_api(vod_url)
+        alt_api_url = get_api_url(url=vod_url)
+        episode_data = get_episode_data_from_api(alt_api_url)
 
     if episode_data is None:
         print("Both API Failed.. Skipping...")
