@@ -388,7 +388,11 @@ def download_thumbnail_fallback(episode_data, show_mode, upload_to_ia):
         file_directory = dl_path / episode_data["show_title"] / file_name
         thumbnail_url = episode_data["large_thumb_alt"]
         file_extension = os.path.splitext(thumbnail_url)[1]
+
         file_path = file_directory / f"{file_name}{file_extension}"
+        if file_path.exists():
+            print("Thumbnail already exists. Skipping download.")
+            return
 
         # Attempt to download
         s = requests.Session()
@@ -458,6 +462,10 @@ def download_thumbnail(thumbnail_url, episode_data, show_mode, upload_to_ia):
             file_extension = os.path.splitext(thumbnail_url)[1]
 
         file_path = file_directory / f"{file_name}{file_extension}"
+
+        if file_path.exists():
+            print("Thumbnail already exists. Skipping download.")
+            return
 
         # Attempt to download
         s = requests.Session()
