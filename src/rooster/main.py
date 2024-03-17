@@ -71,6 +71,8 @@ def process_links_from_file(
     fragment_retries,
     fragment_abort,
     total_slugs,
+    ignore_existing,
+    keep_after_upload,
 ):
     with open(filename, "r") as file:
         links = file.readlines()
@@ -112,6 +114,8 @@ def process_links_from_list(
     fragment_retries,
     fragment_abort,
     total_slugs,
+    ignore_existing,
+    keep_after_upload,
 ):
     num_links = len(episode_links)
     for index, episode in enumerate(episode_links):
@@ -128,6 +132,8 @@ def process_links_from_list(
                 fragment_retries,
                 fragment_abort,
                 total_slugs,
+                ignore_existing,
+                keep_after_upload,
             )
         except Exception as e:
             # Log the exception
@@ -175,6 +181,17 @@ def main():
         action="store_true",
         help="Use aria2c as downloader if it exists in system",
     )
+    parser.add_argument(
+        "--i",
+        action="store_true",
+        help="Ignore exisitng uploads",
+    )
+
+    parser.add_argument(
+        "--keep-uploads",
+        action="store_true",
+        help="Do not delete files after uploads",
+    )
 
     parser.add_argument(
         "--fragment-retries",
@@ -205,6 +222,8 @@ def main():
     use_aria = args.use_aria
     fragment_retries = args.fragment_retries
     fragment_abort = args.fragment_abort
+    ignore_existing = args.i
+    keep_after_upload = args.keep_uploads
 
     if show_flag:
         fn_mode = "show"
@@ -229,6 +248,8 @@ def main():
             fragment_retries,
             fragment_abort,
             total_slugs,
+            ignore_existing,
+            keep_after_upload,
         )
     else:
         if validators.url(input_value):
@@ -249,6 +270,8 @@ def main():
                         fragment_retries,
                         fragment_abort,
                         total_slugs,
+                        ignore_existing,
+                        keep_after_upload,
                     )
                 else:
                     print(
@@ -269,6 +292,8 @@ def main():
                     fragment_retries=fragment_retries,
                     fragment_abort=fragment_abort,
                     total_slugs=total_slugs,
+                    ignore_existing=ignore_existing,
+                    keep_after_upload=keep_after_upload,
                 )
             else:
                 print("Unsupported RT URL. Only supports Series and Episodes")

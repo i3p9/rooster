@@ -3,11 +3,15 @@ import re
 import logging
 from urllib.parse import urlparse
 import requests
+import shutil
 import yt_dlp
-from .channels import get_channel_name_from_id
+
+from .channels import get_channel_name_from_id  # fod debug
 from .shows import get_show_name_from_id
+
 from urllib3.exceptions import MaxRetryError, NewConnectionError
 from requests.adapters import HTTPAdapter
+from requests.exceptions import SSLError
 from requests.exceptions import RequestException
 from pathlib import Path
 import internetarchive
@@ -40,7 +44,20 @@ def save_successful_downloaded_slugs(slug):
         with open(downlaoded_log_path, "a") as log_file:
             log_file.write(slug + "\n")
     except Exception as ex:
-        logging.critical(f"An error occurred while saving slug {slug} - {ex}")
+        logging.critical(
+            f"Successful Download Log: An error occurred while saving slug {slug} - {ex}"
+        )
+
+
+def save_failed_upload_url_slugs(url):
+    downlaoded_log_path = get_failed_uploaded_log_filename()
+    try:
+        with open(downlaoded_log_path, "a") as log_file:
+            log_file.write(url + "\n")
+    except Exception as ex:
+        logging.critical(
+            f"Failed Upload Log: An error occurred while saving url {url} - {ex}"
+        )
 
 
 log_dir = Path.cwd() / "logs"
@@ -81,6 +98,20 @@ def get_downloaded_log_filename():
 
     script_path = Path.cwd()
     archive_log_path = script_path / "logs" / "downloaded.log"
+
+    return archive_log_path
+
+
+def get_failed_uploaded_log_filename():
+    """
+    Gets the path to the downlaoded log file using pathlib.
+    This is a manual logging process to find dupe much quicker
+    Returns:
+        Path: The path to the archive log file.
+    """
+
+    script_path = Path.cwd()
+    archive_log_path = script_path / "logs" / "uploaded.log"
 
     return archive_log_path
 
@@ -186,9 +217,9 @@ def is_tool(name):
 def get_itemname(data) -> str:
     # roosterteeth-test appended for test purposes. -test will be removed
     if data["episode_type"] == "bonus_feature":
-        return f"roosterteeth-test-{data['id_numerical']}-bonus"
+        return f"roosterteeth-{data['id_numerical']}-bonus"
     else:
-        return f"roosterteeth-test-{data['id_numerical']}"
+        return f"roosterteeth-{data['id_numerical']}"
 
 
 def get_folder_location_for_ia_upload(episode_data) -> str:
@@ -277,7 +308,7 @@ def generate_ia_meta(episode_data):
         show_title=show_title,
         season=int(season_number),
         episode=int(episode_number),
-        scanner="Rooster - Roosterteeth Website Mirror 0.1.9",
+        scanner="Rooster - Roosterteeth Website Mirror 0.2.0b",
     )
     return metadata
 
@@ -576,6 +607,7 @@ def downloader(
     fn_mode,
     fragment_retries,
     fragment_abort,
+    keep_after_upload,
 ):
     video_options = {
         "username": username,
@@ -608,8 +640,8 @@ def downloader(
     }
 
     ## use aria2c if it exists in system
-    if is_tool("aria2c"):
-        if use_aria is True:
+    if use_aria is True:
+        if is_tool("aria2c"):
             video_options["external_downloader"] = "aria2c"
             video_options["external_downloader_args"] = [
                 "-j 16",
@@ -740,12 +772,17 @@ def downloader(
 
             if ready_for_upload:
                 print("Directory contains .mp4 files. Uploading")
-                upload_ia(
+                upload_status = upload_ia(
                     directory_location=container_dir,
                     md=ia_metadata,
                     episoda_data=episode_data,
+                    keep_after_upload=keep_after_upload,
                 )
-                print(f"uploaded, this dir will be removed: {container_dir}")
+                if upload_status is not True:
+                    print("Something went wrong with the upload, try again later.")
+                else:
+                    if not keep_after_upload:
+                        shutil.rmtree(container_dir)
 
             else:
                 print("Directory does not contain .mp4 files. Exiting.")
@@ -978,6 +1015,8 @@ def show_stuff(
     fragment_retries,
     fragment_abort,
     total_slugs,
+    ignore_existing,
+    keep_after_upload,
 ):
     if not is_tool("ffmpeg"):
         print("ffmpeg not installed, go do that")
@@ -1004,17 +1043,18 @@ def show_stuff(
             )
         else:
             if fn_mode == "ia":
-                item_exists, identifier = check_if_ia_item_exists(
-                    episode_data=episode_data
-                )
-                if item_exists is True:
-                    print(
-                        f"Item already exists at https://archive.org/details/{identifier}"
+                if not ignore_existing:
+                    item_exists, identifier = check_if_ia_item_exists(
+                        episode_data=episode_data
                     )
-                    logging.info(
-                        f"Item already exists at https://archive.org/details/{identifier}"
-                    )
-                    return
+                    if item_exists is True:
+                        print(
+                            f"Item already exists at https://archive.org/details/{identifier}"
+                        )
+                        logging.info(
+                            f"Item already exists at https://archive.org/details/{identifier}"
+                        )
+                        return
 
             downloader(
                 username,
@@ -1026,10 +1066,11 @@ def show_stuff(
                 fn_mode,
                 fragment_retries,
                 fragment_abort,
+                keep_after_upload,
             )
 
 
-def upload_ia(directory_location, md, episoda_data):
+def upload_ia(directory_location, md, episoda_data, keep_after_upload):
     identifier_ia = get_itemname(episoda_data)
 
     # TODO: parse ia_config file
@@ -1038,28 +1079,73 @@ def upload_ia(directory_location, md, episoda_data):
     #     msg = "`internetarchive` configuration file is not configured" " properly."
     #     raise Exception(msg)
 
-    print("metadata to ia: ", md)
-    print(str(directory_location))
     dir_loc_with_slash = str(directory_location) + "/"
-    print("with slash")
-    print(dir_loc_with_slash)
-    # upload func has delete built it
-    r = internetarchive.upload(
-        identifier=identifier_ia,
-        files=dir_loc_with_slash,
-        metadata=md,
-        verbose=True,
-        retries=9001,
-        request_kwargs=dict(timeout=9001),
-    )
 
-    # print(r[0])
-    r.raise_for_status()
+    dete_after_upload = not keep_after_upload
 
-    # for res in r:
-    #     print(res)
-    #     print(res.status_code)
+    try:
+        r = internetarchive.upload(
+            identifier=identifier_ia,
+            files=dir_loc_with_slash,
+            metadata=md,
+            verbose=True,
+            retries=9001,
+            request_kwargs=dict(timeout=9001),
+            delete=dete_after_upload,
+            # checksum=True,
+        )
 
-    if r[0].status_code == 200:
-        print(f"Uplaoded Successfully at https://archive.org/details/{identifier_ia}")
-        directory_location.rmdir()
+        VIDEO_OKAY = False
+        successful_uploads = 0
+        for response in r:
+            if response.status_code == 200:
+                successful_uploads += 1
+
+            # Check if the URL ends with '.mp4'
+            if response.url.endswith(".mp4"):
+                print(
+                    f"Uploaded Successfully at https://archive.org/details/{identifier_ia}"
+                )
+                VIDEO_OKAY = True
+
+        if successful_uploads != len(r):
+            print(f"{successful_uploads} out of {len(r)} uploaded successfully")
+        if successful_uploads == 0:
+            save_failed_upload_url_slugs(md["originalUrl"])
+            print("something went wrong with the uploads")
+
+        return VIDEO_OKAY
+
+        # if r[0].status_code == 200:
+        #     print(
+        #         f"Uploaded Successfully at https://archive.org/details/{identifier_ia}"
+        #     )
+        #     total_responses = len(r)
+        #     successful_responses = sum(
+        #         1 for response in r if response.status_code == 200
+        #     )
+        #     unsuccessful_responses = total_responses - successful_responses
+        #     if unsuccessful_responses > 0:
+        #         print(
+        #             f"{unsuccessful_responses} out of {total_responses} uploads were unsuccessful. Please check the Archive.org link to make sure all is OKAY."
+        #         )
+        #     directory_location.rmdir()
+
+        #     return True
+        # else:
+        #     print("Something went wrong. Try again.")
+        #     save_failed_upload_url_slugs(md["originalUrl"])
+
+    except SSLError as ssl_error:
+        print(f"SSLError occurred: {ssl_error}")
+        logging.critical(f"SSLError occurred: {ssl_error}")
+
+    except MaxRetryError as max_retry_error:
+        print(f"MaxRetryError occurred: {max_retry_error}")
+        logging.critical(f"MaxRetryError occurred: {max_retry_error}")
+
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        logging.critical(f"An unexpected error occurred: {e}")
+
+    return False
