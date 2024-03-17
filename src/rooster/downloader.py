@@ -568,6 +568,8 @@ def downloader(
     concurrent_fragments,
     use_aria,
     fn_mode,
+    fragment_retries,
+    fragment_abort,
 ):
     video_options = {
         "username": username,
@@ -582,7 +584,8 @@ def downloader(
         "nooverwrites": True,
         "merge_output_format": "mp4",
         "retries": 10,
-        "fragment_retries": 10,
+        "fragment_retries": fragment_retries,
+        "skip_unavailable_fragments": fragment_abort,
         "download_archive": get_archive_log_filename(),
         # "progress_hooks": [ydl_progress_hook],
     }
@@ -943,6 +946,8 @@ def show_stuff(
     fast_check,
     use_aria,
     fn_mode,
+    fragment_retries,
+    fragment_abort,
 ):
     if not is_tool("ffmpeg"):
         print("ffmpeg not installed, go do that")
@@ -989,6 +994,8 @@ def show_stuff(
                 concurrent_fragments,
                 use_aria,
                 fn_mode,
+                fragment_retries,
+                fragment_abort,
             )
 
 
