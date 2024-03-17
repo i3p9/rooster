@@ -128,6 +128,7 @@ def main():
         type=int,
         help="Number of concurrent fragments (default is 10)",
     )
+
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument(
         "--show", action="store_true", help="Download in a Predefied Show formatting"
@@ -137,8 +138,11 @@ def main():
     )
 
     group.add_argument(
-        "--archivist", action="store_true", help="Downloads in a Archivist like fashion"
+        "--archivist",
+        action="store_true",
+        help="Downloads in a Archivist like fashion",
     )
+
     parser.add_argument(
         "--fast-check",
         action="store_true",
@@ -149,7 +153,7 @@ def main():
         action="store_true",
         help="Use aria2c as downloader if it exists in system",
     )
-    parser.add_argument("--show", action="store_true", help="Flag to show something")
+
     parser.add_argument(
         "--fragment-retries",
         default=10,
