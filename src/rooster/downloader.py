@@ -593,7 +593,8 @@ def downloader(
             "fragment": lambda attempt: min(5, attempt),
             "file_access": lambda attempt: min(2, attempt * 0.5),
         },
-        "fragment_retries": 10,
+        "sleep_interval": 3,
+        "max_sleep_interval": 5,
     }
     extractor_options = {
         "username": username,
