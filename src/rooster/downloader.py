@@ -325,7 +325,7 @@ def download_thumbnail(thumbnail_url, episode_data, show_mode):
 
 
 def downloader(
-    username, password, vod_url, episode_data, concurrent_fragments, show_mode
+    username, password, vod_url, episode_data, concurrent_fragments, show_mode, fragment_retries, fragment_abort
 ):
     video_options = {
         "username": username,
@@ -340,7 +340,8 @@ def downloader(
         "nooverwrites": True,
         "merge_output_format": "mp4",
         "retries": 10,
-        "fragment_retries": 10,
+        "fragment_retries": fragment_retries,
+        "abort-on-unavailable-fragments": fragment_abort,
         "download_archive": get_archive_log_filename(),
         # "progress_hooks": [ydl_progress_hook],
     }
@@ -562,7 +563,7 @@ def get_episode_data_from_rt_api(url):
             return False
 
 
-def show_stuff(username, password, vod_url, concurrent_fragments, show_mode):
+def show_stuff(username, password, vod_url, concurrent_fragments, show_mode, fragment_retries, fragment_abort):
     if not is_tool("ffmpeg"):
         print("ffmpeg not installed, go do that")
         exit()
@@ -575,5 +576,5 @@ def show_stuff(username, password, vod_url, concurrent_fragments, show_mode):
         if episode_data is False:
             episode_data = get_episode_data_from_api(vod_url)
         downloader(
-            username, password, vod_url, episode_data, concurrent_fragments, show_mode
+            username, password, vod_url, episode_data, concurrent_fragments, show_mode, fragment_retries, fragment_abort
         )
