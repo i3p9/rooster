@@ -50,6 +50,8 @@ def process_links_from_file(
     fast_check,
     use_aria,
     fn_mode,
+    fragment_retries,
+    fragment_abort,
 ):
     with open(filename, "r") as file:
         links = file.readlines()
@@ -67,6 +69,8 @@ def process_links_from_file(
                 fast_check,
                 use_aria,
                 fn_mode,
+                fragment_retries,
+                fragment_abort,
             )
         except Exception as e:
             # Log the exception
@@ -85,6 +89,8 @@ def process_links_from_list(
     fast_check,
     use_aria,
     fn_mode,
+    fragment_retries,
+    fragment_abort,
 ):
     num_links = len(episode_links)
     for index, episode in enumerate(episode_links):
@@ -98,6 +104,8 @@ def process_links_from_list(
                 fast_check,
                 use_aria,
                 fn_mode,
+                fragment_retries,
+                fragment_abort,
             )
         except Exception as e:
             # Log the exception
@@ -141,6 +149,18 @@ def main():
         action="store_true",
         help="Use aria2c as downloader if it exists in system",
     )
+    parser.add_argument("--show", action="store_true", help="Flag to show something")
+    parser.add_argument(
+        "--fragment-retries",
+        default=10,
+        type=int,
+        help="Number of attempts to retry downloading fragments (default is 10)",
+    )
+    parser.add_argument(
+        "--fragment-abort",
+        action="store_true",
+        help="Abort if fail to download fragment (default off)",
+    )
 
     parser.add_argument("input", help="URL or file containing list of links")
 
@@ -157,6 +177,8 @@ def main():
     archivist_mode = args.archivist
     fast_check = args.fast_check
     use_aria = args.use_aria
+    fragment_retries = args.fragment_retries
+    fragment_abort = args.fragment_abort
 
     if show_flag:
         fn_mode = "show"
@@ -176,6 +198,8 @@ def main():
             fast_check,
             use_aria,
             fn_mode,
+            fragment_retries,
+            fragment_abort,
         )
     else:
         if validators.url(input_value):
@@ -193,6 +217,8 @@ def main():
                         fast_check,
                         use_aria,
                         fn_mode,
+                        fragment_retries,
+                        fragment_abort,
                     )
                 else:
                     print(
@@ -210,6 +236,8 @@ def main():
                     fast_check,
                     use_aria,
                     fn_mode,
+                    fragment_retries,
+                    fragment_abort,
                 )
             else:
                 print("Unsupported RT URL. Only supports Series and Episodes")
