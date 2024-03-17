@@ -33,7 +33,7 @@ logging.basicConfig(
 
 
 def process_links_from_file(
-    username, password, filename, concurrent_fragments, show_mode
+    username, password, filename, concurrent_fragments, show_mode, fragment_retries, fragment_abort
 ):
     with open(filename, "r") as file:
         links = file.readlines()
@@ -44,7 +44,7 @@ def process_links_from_file(
         print(f"Downloading link {index} of {num_links}: {line.strip()}")
         try:
             show_stuff(
-                username, password, line.strip(), concurrent_fragments, show_mode
+                username, password, line.strip(), concurrent_fragments, show_mode, fragment_retries, fragment_abort
             )
         except Exception as e:
             # Log the exception
@@ -53,13 +53,13 @@ def process_links_from_file(
                 f"Error occurred while processing link {index}: {line.strip()}"
             )
 
-def process_links_from_list(username, password, episode_links, concurrent_fragments, show_mode,input_value):
+def process_links_from_list(username, password, episode_links, concurrent_fragments, show_mode, fragment_retries, fragment_abort, input_value):
     num_links = len(episode_links)
     for index,episode in enumerate(episode_links):
         print(f"Downloading link {index+1} of {num_links}: {episode}")
         try:
             show_stuff(
-                username, password, episode, concurrent_fragments, show_mode
+                username, password, episode, concurrent_fragments, show_mode, fragment_retries, fragment_abort
             )
         except Exception as e:
             # Log the exception
@@ -81,6 +81,13 @@ def main():
         help="Number of concurrent fragments (default is 10)",
     )
     parser.add_argument("--show", action="store_true", help="Flag to show something")
+    parser.add_argument(
+        "--fragment-retries",
+        default=10,
+        type=int,
+        help="Number of attempts to retry downloading fragments (default is 10)",
+    )
+    parser.add_argument("--fragment-abort", action="store_true", help="Abort if fail to download fragment (default off)")
 
     parser.add_argument("input", help="URL or file containing list of links")
 
@@ -91,6 +98,8 @@ def main():
     input_value = args.input
     concurrent_fragments = args.concurrent_fragments
     show_flag = args.show
+    fragment_retries = args.fragment_retries
+    fragment_abort = args.fragment_abort
 
     if show_flag:
         show_mode = True
@@ -99,7 +108,7 @@ def main():
 
     if input_value.endswith(".txt"):
         process_links_from_file(
-            username, password, input_value, concurrent_fragments, show_mode
+            username, password, input_value, concurrent_fragments, show_mode, fragment_retries, fragment_abort
         )
     else:
         if validators.url(input_value):
@@ -108,14 +117,14 @@ def main():
                 parser = RoosterTeethParser()
                 episode_links = parser.get_episode_links(input_value)
                 if episode_links is not None:
-                    process_links_from_list(username, password, episode_links, concurrent_fragments, show_mode,input_value)
+                    process_links_from_list(username, password, episode_links, concurrent_fragments, show_mode, fragment_retries, fragment_abort, input_value)
                 else:
                     print(f"something went wrong with parsing: {input_value}. Try again or check your links")
                     logging.critical(f"parsing failed for: {input_value}")
                     exit()
 
             elif 'roosterteeth.com' in url_parts and 'watch' in url_parts:
-                show_stuff(username, password, input_value, concurrent_fragments, show_mode)
+                show_stuff(username, password, input_value, concurrent_fragments, show_mode, fragment_retries, fragment_abort)
             else:
                 print("Unsupported RT URL. Only supports Series and Episodes")
                 exit()
