@@ -588,6 +588,12 @@ def downloader(
         "skip_unavailable_fragments": fragment_abort,
         "download_archive": get_archive_log_filename(),
         # "progress_hooks": [ydl_progress_hook],
+        "retry_sleep_functions": {
+            "http": lambda attempt: min(10, attempt**2),
+            "fragment": lambda attempt: min(5, attempt),
+            "file_access": lambda attempt: min(2, attempt * 0.5),
+        },
+        "fragment_retries": 10,
     }
     extractor_options = {
         "username": username,
