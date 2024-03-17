@@ -29,12 +29,13 @@ def get_download_location(fn_mode: str) -> Path:
     return download_path
 
 
-current_dir = get_download_location(fn_mode="show")
-log_output_file = os.path.join(current_dir, "rooster.log")
+log_dir = Path.cwd() / "logs"
+if not os.path.exists(log_dir):
+    os.makedirs(log_dir)
 
 
 logging.basicConfig(
-    filename=log_output_file,
+    filename="logs/rooster.log",
     filemode="a",
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     level=logging.DEBUG,
