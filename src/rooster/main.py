@@ -159,10 +159,12 @@ def main():
 
     if show_flag:
         fn_mode = "show"
-    elif upload_to_ia:
-        fn_mode = "ia"
     elif archivist_mode:
         fn_mode = "archivist"
+    elif upload_to_ia:
+        fn_mode = "ia"
+        print("Upload to IA not finished Yet. Exiting...")
+        exit()
 
     if input_value.endswith(".txt"):
         process_links_from_file(
