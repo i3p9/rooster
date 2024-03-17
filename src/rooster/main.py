@@ -34,6 +34,24 @@ if not os.path.exists(log_dir):
     os.makedirs(log_dir)
 
 
+def load_slugs_from_downloaded_log():
+    downloaded_log_path = Path.cwd() / "logs" / "downloaded.log"
+    slugs = set()
+
+    if os.path.isfile(downloaded_log_path):
+        try:
+            with open(downloaded_log_path, "r") as f:
+                for line in f:
+                    slugs.add(
+                        line.strip()
+                    )  # Assuming each line in the log file represents a slug
+        except (FileNotFoundError, IOError) as err:
+            logging.warning("Error for opening Slugs: {err}")
+            pass
+    print("Loaded all previously downloaded slug...")
+    return slugs
+
+
 logging.basicConfig(
     filename="logs/rooster.log",
     filemode="a",
@@ -52,6 +70,7 @@ def process_links_from_file(
     fn_mode,
     fragment_retries,
     fragment_abort,
+    total_slugs,
 ):
     with open(filename, "r") as file:
         links = file.readlines()
@@ -71,6 +90,7 @@ def process_links_from_file(
                 fn_mode,
                 fragment_retries,
                 fragment_abort,
+                total_slugs,
             )
         except Exception as e:
             # Log the exception
@@ -91,6 +111,7 @@ def process_links_from_list(
     fn_mode,
     fragment_retries,
     fragment_abort,
+    total_slugs,
 ):
     num_links = len(episode_links)
     for index, episode in enumerate(episode_links):
@@ -106,6 +127,7 @@ def process_links_from_list(
                 fn_mode,
                 fragment_retries,
                 fragment_abort,
+                total_slugs,
             )
         except Exception as e:
             # Log the exception
@@ -191,7 +213,9 @@ def main():
     elif upload_to_ia:
         fn_mode = "ia"
         print("Upload to IA not finished Yet. Exiting...")
-        exit()
+        # exit()
+
+    total_slugs = load_slugs_from_downloaded_log()
 
     if input_value.endswith(".txt"):
         process_links_from_file(
@@ -204,6 +228,7 @@ def main():
             fn_mode,
             fragment_retries,
             fragment_abort,
+            total_slugs,
         )
     else:
         if validators.url(input_value):
@@ -223,6 +248,7 @@ def main():
                         fn_mode,
                         fragment_retries,
                         fragment_abort,
+                        total_slugs,
                     )
                 else:
                     print(
@@ -233,15 +259,16 @@ def main():
 
             elif "roosterteeth.com" in url_parts and "watch" in url_parts:
                 show_stuff(
-                    username,
-                    password,
-                    input_value,
-                    concurrent_fragments,
-                    fast_check,
-                    use_aria,
-                    fn_mode,
-                    fragment_retries,
-                    fragment_abort,
+                    username=username,
+                    password=password,
+                    vod_url=input_value,
+                    concurrent_fragments=concurrent_fragments,
+                    fast_check=fast_check,
+                    use_aria=use_aria,
+                    fn_mode=fn_mode,
+                    fragment_retries=fragment_retries,
+                    fragment_abort=fragment_abort,
+                    total_slugs=total_slugs,
                 )
             else:
                 print("Unsupported RT URL. Only supports Series and Episodes")

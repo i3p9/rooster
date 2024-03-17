@@ -43,16 +43,6 @@ def save_successful_downloaded_slugs(slug):
         logging.critical(f"An error occurred while saving slug {slug} - {ex}")
 
 
-def exists_in_downloaded_log(slug):
-    downlaoded_log_path = get_downloaded_log_filename()
-    if os.path.isfile(downlaoded_log_path):
-        with open(downlaoded_log_path, "r") as f:
-            for line in f:
-                if line.rstrip() == slug:
-                    return True
-        return False
-
-
 log_dir = Path.cwd() / "logs"
 if not os.path.exists(log_dir):
     os.makedirs(log_dir)
@@ -106,6 +96,20 @@ def get_archive_log_filename():
     archive_log_path = script_path / "logs" / "archive.log"
 
     return archive_log_path
+
+
+def exists_in_downloaded_log(slug, slugs):
+    return slug in slugs
+
+
+# def exists_in_downloaded_log(slug):
+#     downlaoded_log_path = get_downloaded_log_filename()
+#     if os.path.isfile(downlaoded_log_path):
+#         with open(downlaoded_log_path, "r") as f:
+#             for line in f:
+#                 if line.rstrip() == slug:
+#                     return True
+#         return False
 
 
 def exists_in_archive(episode_data):
@@ -230,7 +234,7 @@ def check_if_ia_item_exists(episode_data) -> bool:
 def generate_ia_meta(episode_data):
     collection = "opensource_movies"
     mediatype = "movies"
-    title = episode_data["title"]
+    title = episode_data["title_meta"]
     creator = episode_data["channel_title"]
     description = episode_data["description"]
     if description is None:
@@ -256,7 +260,7 @@ def generate_ia_meta(episode_data):
         tags_list.pop()
         tags_string = ";".join(tags_list)
 
-    show_title = episode_data["show_title"]
+    show_title = episode_data["show_title_meta"]
     season_number = episode_data["season_number"]
     episode_number = episode_data["episode_number"]
 
@@ -353,7 +357,7 @@ def get_episode_number(episode):
     return f"E{formatted_string}"
 
 
-def generate_episode_container_name(data) -> str:
+def generate_episode_container_name(data, fn_mode) -> str:
     if data["episode_type"] == "bonus_feature":
         proper_id = f"{data['id_numerical']}-bonus"
     else:
@@ -383,21 +387,21 @@ def download_thumbnail_fallback(episode_data, fn_mode):
                 / episode_data["channel_title"]
                 / episode_data["show_title"]
                 / get_season_name(episode_data["season_number"])
-                / generate_episode_container_name(episode_data)
+                / generate_episode_container_name(episode_data, fn_mode)
             )
 
         if fn_mode == "ia":
             safe_channel_name = get_valid_filename(episode_data["channel_title"])
             safe_show_name = get_valid_filename(episode_data["show_title"])
             file_directory = dl_path / get_valid_filename(
-                generate_episode_container_name(episode_data)
+                generate_episode_container_name(episode_data, fn_mode)
             )
 
         if fn_mode == "archivist":
             safe_channel_name = get_valid_filename(episode_data["channel_title"])
             safe_show_name = get_valid_filename(episode_data["show_title"])
             episode_container = get_valid_filename(
-                generate_episode_container_name(episode_data)
+                generate_episode_container_name(episode_data, fn_mode)
             )
             file_directory = (
                 dl_path / safe_channel_name / safe_show_name / episode_container
@@ -461,20 +465,22 @@ def download_thumbnail(thumbnail_url, episode_data, fn_mode):
                 / episode_data["channel_title"]
                 / episode_data["show_title"]
                 / get_season_name(episode_data["season_number"])
-                / generate_episode_container_name(episode_data)
+                / generate_episode_container_name(episode_data, fn_mode)
             )
         if fn_mode == "ia":
             safe_channel_name = get_valid_filename(episode_data["channel_title"])
             safe_show_name = get_valid_filename(episode_data["show_title"])
             file_directory = dl_path / get_valid_filename(
-                get_valid_filename(generate_episode_container_name(episode_data))
+                get_valid_filename(
+                    generate_episode_container_name(episode_data, fn_mode)
+                )
             )
 
         if fn_mode == "archivist":
             safe_channel_name = get_valid_filename(episode_data["channel_title"])
             safe_show_name = get_valid_filename(episode_data["show_title"])
             episode_container = get_valid_filename(
-                generate_episode_container_name(episode_data)
+                generate_episode_container_name(episode_data, fn_mode)
             )
             file_directory = (
                 dl_path / safe_channel_name / safe_show_name / episode_container
@@ -675,7 +681,7 @@ def downloader(
                 dl_location / episode_data["channel_title"] / episode_data["show_title"]
             )
             full_name_with_dir /= get_season_name(episode_data["season_number"])
-            full_name_with_dir /= generate_episode_container_name(episode_data)
+            full_name_with_dir /= generate_episode_container_name(episode_data, fn_mode)
             full_name_with_dir /= name_with_extension
 
         if fn_mode == "ia":
@@ -683,7 +689,9 @@ def downloader(
             safe_show_name = get_valid_filename(episode_data["show_title"])
             full_name_with_dir = (
                 dl_location
-                / get_valid_filename(generate_episode_container_name(episode_data))
+                / get_valid_filename(
+                    generate_episode_container_name(episode_data, fn_mode)
+                )
                 / name_with_extension
             )
         if fn_mode == "archivist":
@@ -693,7 +701,9 @@ def downloader(
                 dl_location
                 / safe_channel_name
                 / safe_show_name
-                / get_valid_filename(generate_episode_container_name(episode_data))
+                / get_valid_filename(
+                    generate_episode_container_name(episode_data, fn_mode)
+                )
                 / name_with_extension
             )
 
@@ -810,6 +820,7 @@ def get_episode_data_from_api(url):
         episode_type = episode_obj.get("type")
         attributes = episode_obj.get("attributes", {})
         title = make_filename_safe(attributes.get("title"))
+        title_meta = attributes.get("title")
         channel_id = attributes.get("channel_id")
         season_id = attributes.get("season_id")
         original_air_date_full = attributes.get("original_air_date", "")
@@ -817,6 +828,7 @@ def get_episode_data_from_api(url):
         show_id = attributes.get("show_id")
         parent_slug = attributes.get("parent_content_slug", "")
         show_title = make_filename_safe(get_show_name_from_id(show_id))
+        show_title_meta = get_show_name_from_id(show_id)
         episode_number = attributes.get("number")
         season = attributes.get("season_number", "99")
         if season_id:
@@ -832,6 +844,7 @@ def get_episode_data_from_api(url):
             else None
         )
         channel_title = make_filename_safe(get_channel_name_from_id(channel_id))
+        channel_title_meta = get_channel_name_from_id(channel_id)
         description = attributes.get("description")
         slug = attributes.get("slug")
         genres = attributes.get("genres")
@@ -841,8 +854,11 @@ def get_episode_data_from_api(url):
             "title": title,
             "original_air_date": original_air_date,
             "show_title": show_title,
+            "show_title_meta": show_title_meta,
+            "title_meta": title_meta,
             "is_first_content": is_first_content,
             "channel_title": channel_title,
+            "channel_title_meta": channel_title_meta,
             "large_thumb": large_thumb,
             "season_number": season,
             "episode_number": episode_number,
@@ -897,11 +913,13 @@ def get_episode_data_from_rt_api(url):
         episode_type = episode_obj.get("type")
         attributes = episode_obj.get("attributes", {})
         title = make_filename_safe(attributes.get("title"))
+        title_meta = attributes.get("title")
         channel_id = attributes.get("channel_id")
         original_air_date_full = attributes.get("original_air_date", "")
         is_first_content = attributes.get("is_sponsors_only")
-        show_id = show_title = attributes.get("show_id")
+        show_id = attributes.get("show_id")
         show_title = make_filename_safe(get_show_name_from_id(show_id))
+        show_title_meta = get_show_name_from_id(show_id)
         season_id = attributes.get("season_id")
         parent_slug = attributes.get("parent_content_slug", "")
         season = attributes.get("season_number", "99")
@@ -920,6 +938,7 @@ def get_episode_data_from_rt_api(url):
             else None
         )
         channel_title = make_filename_safe(get_channel_name_from_id(channel_id))
+        channel_title_meta = get_channel_name_from_id(channel_id)
         description = attributes.get("description")
         slug = attributes.get("slug")
         genres = attributes.get("genres")
@@ -929,8 +948,11 @@ def get_episode_data_from_rt_api(url):
             "title": title,
             "original_air_date": original_air_date,
             "show_title": show_title,
+            "show_title_meta": show_title_meta,
+            "title_meta": title_meta,
             "is_first_content": is_first_content,
             "channel_title": channel_title,
+            "channel_title_meta": channel_title_meta,
             "large_thumb": large_thumb,
             "large_thumb_alt": large_thumb_alt,
             "season_number": season,
@@ -955,13 +977,14 @@ def show_stuff(
     fn_mode,
     fragment_retries,
     fragment_abort,
+    total_slugs,
 ):
     if not is_tool("ffmpeg"):
         print("ffmpeg not installed, go do that")
         exit()
     # check manually
     if fast_check:
-        if exists_in_downloaded_log(vod_url.split("/")[-1]):
+        if exists_in_downloaded_log(slug=vod_url.split("/")[-1], slugs=total_slugs):
             print(f"{vod_url}: URL already recorded in downloaded log")
             return
 
@@ -1011,25 +1034,20 @@ def upload_ia(directory_location, md, episoda_data):
 
     # TODO: parse ia_config file
 
-    # parsed_ia_s3_config = parse_config_file(ia_config_path)[2]["s3"]
-    # s3_access_key = parsed_ia_s3_config["access"]
-    # s3_secret_key = parsed_ia_s3_config["secret"]
-
     # if None in {s3_access_key, s3_secret_key}:
     #     msg = "`internetarchive` configuration file is not configured" " properly."
     #     raise Exception(msg)
 
-    # print("identifier: ", identifier_ia)
-    # print("files: ", str(directory_location))
-    # print("metadata: ", md)
-    # print("medata type: ", type(md))
-
+    print("metadata to ia: ", md)
+    print(str(directory_location))
+    dir_loc_with_slash = str(directory_location) + "/"
+    print("with slash")
+    print(dir_loc_with_slash)
     # upload func has delete built it
     r = internetarchive.upload(
         identifier=identifier_ia,
-        files=str(directory_location),
+        files=dir_loc_with_slash,
         metadata=md,
-        debug=True,
         verbose=True,
         retries=9001,
         request_kwargs=dict(timeout=9001),
@@ -1038,6 +1056,10 @@ def upload_ia(directory_location, md, episoda_data):
     # print(r[0])
     r.raise_for_status()
 
-    # if r[0].status_code == 200:
-    #     print(f"Uplaoded Successfully at https://archive.org/details/{identifier_ia}")
-    #     directory_location.rmdir()
+    # for res in r:
+    #     print(res)
+    #     print(res.status_code)
+
+    if r[0].status_code == 200:
+        print(f"Uplaoded Successfully at https://archive.org/details/{identifier_ia}")
+        directory_location.rmdir()
