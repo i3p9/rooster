@@ -341,7 +341,7 @@ def downloader(
         "merge_output_format": "mp4",
         "retries": 10,
         "fragment_retries": fragment_retries,
-        "abort-on-unavailable-fragments": fragment_abort,
+        "skip_unavailable_fragments": fragment_abort,
         "download_archive": get_archive_log_filename(),
         # "progress_hooks": [ydl_progress_hook],
     }
