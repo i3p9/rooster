@@ -1083,9 +1083,11 @@ def upload_ia(directory_location, md, episoda_data, keep_after_upload):
 
     dete_after_upload = not keep_after_upload
 
+    item = internetarchive.get_item(identifier=identifier_ia)
+
     try:
-        r = internetarchive.upload(
-            identifier=identifier_ia,
+        r = item.upload(
+            # identifier=identifier_ia,
             files=dir_loc_with_slash,
             metadata=md,
             verbose=True,
@@ -1112,7 +1114,9 @@ def upload_ia(directory_location, md, episoda_data, keep_after_upload):
             print(f"{successful_uploads} out of {len(r)} uploaded successfully")
         if successful_uploads == 0:
             save_failed_upload_url_slugs(md["originalUrl"])
-            print("something went wrong with the uploads")
+            print(
+                "something went wrong with the uploads. if you are updating existing item, ignore this. And any NoneType Error"
+            )
 
         return VIDEO_OKAY
 
