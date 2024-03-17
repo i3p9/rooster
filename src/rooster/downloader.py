@@ -338,7 +338,6 @@ def check_if_files_are_ready(directory) -> bool:
         "*.f247.*",
         "*.temp",
         "*.ytdlp",
-        "*jpg",
     ]
 
     temp_files = []
