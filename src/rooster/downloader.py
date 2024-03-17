@@ -13,20 +13,20 @@ from pathlib import Path
 import internetarchive
 
 
-def get_download_location(show_mode: bool, upload_to_ia: bool) -> Path:
+def get_download_location(fn_mode: str) -> Path:
     """
     Retrieves the download location based on the show mode.
-    Args: show_mode (bool):
+    Args: fn_mode: show | ia | archivist
     Returns:
         Path: A pathlib.Path object
     """
 
     script_path = Path.cwd()
 
-    if show_mode is True:
+    if fn_mode == "show" or fn_mode == "archivist":
         download_path = script_path / "Downloads"
 
-    if upload_to_ia is True:
+    if fn_mode == "ia":
         # download_path = script_path / "roosterteeth-temp"
         download_path = Path("~/.rooster").expanduser()
 
@@ -188,7 +188,7 @@ def get_itemname(data) -> str:
 
 
 def get_folder_location_for_ia_upload(episode_data) -> str:
-    dl_path = get_download_location(show_mode=False, upload_to_ia=True)
+    dl_path = get_download_location(fn_mode="ia")
     ia_upload_dir = (
         dl_path
         / episode_data["channel_title"]
@@ -316,7 +316,7 @@ def check_if_files_are_ready(directory) -> bool:
     return False
 
 
-def generate_file_name(data, show_mode, upload_to_ia) -> str:
+def generate_file_name(data, fn_mode) -> str:
     episode_number = get_episode_number(data["episode_number"])
     season_number = get_season_name(data["season_number"])
     if data["episode_type"] == "bonus_feature":
@@ -324,15 +324,20 @@ def generate_file_name(data, show_mode, upload_to_ia) -> str:
     else:
         proper_id = f"{data['id_numerical']}"
 
-    if show_mode is True:
+    if fn_mode == "show":
         if data["is_first_content"] is True:
             return f"{data['original_air_date']} - ☆ {season_number}{episode_number} - {data['title']} ({proper_id})"
         else:
             return f"{data['original_air_date']} - {season_number}{episode_number} - {data['title']} ({proper_id})"
 
-    if upload_to_ia is True:
+    if fn_mode == "ia":
         safe_title = get_valid_filename(data["title"])
         return f"{data['original_air_date']}_{safe_title}_[{proper_id}]"
+
+    if fn_mode == "archivist":
+        safe_title = get_valid_filename(data["title"])
+        return f"{data['original_air_date']}_{safe_title}_[{proper_id}]"
+
     return None
 
 
@@ -361,17 +366,18 @@ def generate_basic_file_name(data):
     return f"{data['channel_title']} {data['title']} [{data['id_numerical']}]"
 
 
-def download_thumbnail_fallback(episode_data, show_mode, upload_to_ia):
+def download_thumbnail_fallback(episode_data, fn_mode):
     print("Attemping to download HQ thumbnail... (Fallback)")
     try:
         # Ensure the download location exists
-        dl_path = Path(get_download_location(show_mode))
+        dl_path = Path(get_download_location(fn_mode=fn_mode))
 
         # Generate the file name and create the directory
         file_name = generate_file_name(
-            data=episode_data, show_mode=show_mode, upload_to_ia=upload_to_ia
+            data=episode_data,
+            fn_mode=fn_mode,
         )
-        if show_mode is True:
+        if fn_mode == "show":
             file_directory = (
                 dl_path
                 / episode_data["channel_title"]
@@ -380,11 +386,21 @@ def download_thumbnail_fallback(episode_data, show_mode, upload_to_ia):
                 / generate_episode_container_name(episode_data)
             )
 
-        if upload_to_ia:
+        if fn_mode == "ia":
             safe_channel_name = get_valid_filename(episode_data["channel_title"])
             safe_show_name = get_valid_filename(episode_data["show_title"])
             file_directory = dl_path / get_valid_filename(
                 generate_episode_container_name(episode_data)
+            )
+
+        if fn_mode == "archivist":
+            safe_channel_name = get_valid_filename(episode_data["channel_title"])
+            safe_show_name = get_valid_filename(episode_data["show_title"])
+            episode_container = get_valid_filename(
+                generate_episode_container_name(episode_data)
+            )
+            file_directory = (
+                dl_path / safe_channel_name / safe_show_name / episode_container
             )
 
         file_directory = dl_path / episode_data["show_title"] / file_name
@@ -427,18 +443,19 @@ def download_thumbnail_fallback(episode_data, show_mode, upload_to_ia):
     return False
 
 
-def download_thumbnail(thumbnail_url, episode_data, show_mode, upload_to_ia):
+def download_thumbnail(thumbnail_url, episode_data, fn_mode):
     print("Attemping to download HQ thumbnail...")
     try:
         # Ensure the download location exists
-        dl_path = Path(get_download_location(show_mode, upload_to_ia))
+        dl_path = Path(get_download_location(fn_mode=fn_mode))
         dl_path.mkdir(parents=True, exist_ok=True)
 
         # Generate the file name and create the directory
         file_name = generate_file_name(
-            data=episode_data, show_mode=show_mode, upload_to_ia=upload_to_ia
+            data=episode_data,
+            fn_mode=fn_mode,
         )
-        if show_mode is True:
+        if fn_mode == "show":
             file_directory = (
                 dl_path
                 / episode_data["channel_title"]
@@ -446,11 +463,21 @@ def download_thumbnail(thumbnail_url, episode_data, show_mode, upload_to_ia):
                 / get_season_name(episode_data["season_number"])
                 / generate_episode_container_name(episode_data)
             )
-        if upload_to_ia:
+        if fn_mode == "ia":
             safe_channel_name = get_valid_filename(episode_data["channel_title"])
             safe_show_name = get_valid_filename(episode_data["show_title"])
             file_directory = dl_path / get_valid_filename(
                 get_valid_filename(generate_episode_container_name(episode_data))
+            )
+
+        if fn_mode == "archivist":
+            safe_channel_name = get_valid_filename(episode_data["channel_title"])
+            safe_show_name = get_valid_filename(episode_data["show_title"])
+            episode_container = get_valid_filename(
+                generate_episode_container_name(episode_data)
+            )
+            file_directory = (
+                dl_path / safe_channel_name / safe_show_name / episode_container
             )
 
         file_directory.mkdir(parents=True, exist_ok=True)
@@ -483,9 +510,7 @@ def download_thumbnail(thumbnail_url, episode_data, show_mode, upload_to_ia):
                 logging.info(
                     f"An error occurred: {e}. Please note this episodeId: {episode_data['id_numerical']}"
                 )
-                alt_thumb_status = download_thumbnail_fallback(
-                    episode_data, show_mode, upload_to_ia
-                )
+                alt_thumb_status = download_thumbnail_fallback(episode_data, fn_mode)
         except MaxRetryError as e:
             print(f"MaxRetryError occurred: {e}")
             if hasattr(e, "pool"):
@@ -494,24 +519,18 @@ def download_thumbnail(thumbnail_url, episode_data, show_mode, upload_to_ia):
             logging.warning(f"MaxRetryError occurred: {e}")
 
             if episode_data["large_thumbnail_alt"]:
-                alt_thumb_status = download_thumbnail_fallback(
-                    episode_data, show_mode, upload_to_ia
-                )
+                alt_thumb_status = download_thumbnail_fallback(episode_data, fn_mode)
         except NewConnectionError as e:
             print(f"NewConnectionError occurred: {e}")
             logging.warning(f"NewConnectionError occurred: {e}")
             if episode_data["large_thumbnail_alt"]:
-                alt_thumb_status = download_thumbnail_fallback(
-                    episode_data, show_mode, upload_to_ia
-                )
+                alt_thumb_status = download_thumbnail_fallback(episode_data, fn_mode)
 
         except Exception as e:
             print(f"An error occurred: {e}")
             logging.critical(f"An error occurred: {e}")
             if episode_data["large_thumbnail_alt"]:
-                alt_thumb_status = download_thumbnail_fallback(
-                    episode_data, show_mode, upload_to_ia
-                )
+                alt_thumb_status = download_thumbnail_fallback(episode_data, fn_mode)
 
         return alt_thumb_status
 
@@ -520,9 +539,7 @@ def download_thumbnail(thumbnail_url, episode_data, show_mode, upload_to_ia):
         return False
 
 
-def download_thumb_from_yt_dlp_data(
-    extractor_options, vod_url, episode_data, show_mode, upload_to_ia
-):
+def download_thumb_from_yt_dlp_data(extractor_options, vod_url, episode_data, fn_mode):
     try:
         info_dict = yt_dlp.YoutubeDL(extractor_options).extract_info(
             vod_url, download=False
@@ -538,8 +555,7 @@ def download_thumb_from_yt_dlp_data(
         thumbnail_success = download_thumbnail(
             yt_dlp_dict_data["large_thumbnail_url_ytdl"],
             episode_data,
-            show_mode,
-            upload_to_ia,
+            fn_mode,
         )
         return thumbnail_success
 
@@ -550,9 +566,8 @@ def downloader(
     vod_url,
     episode_data,
     concurrent_fragments,
-    show_mode,
-    upload_to_ia,
     use_aria,
+    fn_mode,
 ):
     video_options = {
         "username": username,
@@ -611,15 +626,14 @@ def downloader(
         if episode_data["large_thumb"]:
             try:
                 thumbnail_success = download_thumbnail(
-                    episode_data["large_thumb"], episode_data, show_mode, upload_to_ia
+                    episode_data["large_thumb"], episode_data, fn_mode
                 )
                 if not thumbnail_success:
                     download_thumb_from_yt_dlp_data(
                         extractor_options=extractor_options,
                         vod_url=vod_url,
                         episode_data=episode_data,
-                        show_mode=show_mode,
-                        upload_to_ia=upload_to_ia,
+                        fn_mode=fn_mode,
                     )
             except FileNotFoundError as fnf_err:
                 print(f"Error with file location or sth {fnf_err}")
@@ -634,17 +648,18 @@ def downloader(
         # Show Mode: For keeping files
         # IA Mode: For uploading to IA, and deleting afterwards
         file_name = generate_file_name(
-            data=episode_data, show_mode=show_mode, upload_to_ia=upload_to_ia
+            data=episode_data,
+            fn_mode=fn_mode,
         )
         name_with_extension = file_name + ".%(ext)s"
 
         # Step 3: Download directory
-        # Downloads folder if show_mode is True
-        # roosterteeth folder if upload_to_ia is True
-        dl_location = get_download_location(show_mode, upload_to_ia)
+        # Downloads folder if fn_mode is show | archivist
+        # ~/.roosterteeth folder if if fn_mode is ia
+        dl_location = get_download_location(fn_mode=fn_mode)
 
         # Step 4: Generate full download directory
-        if show_mode:
+        if fn_mode == "show":
             # Channel Name / Show Title / Sxx / YYYY-MM-DD [ID] / Filename
             full_name_with_dir = (
                 dl_location / episode_data["channel_title"] / episode_data["show_title"]
@@ -653,7 +668,7 @@ def downloader(
             full_name_with_dir /= generate_episode_container_name(episode_data)
             full_name_with_dir /= name_with_extension
 
-        if upload_to_ia:
+        if fn_mode == "ia":
             safe_channel_name = get_valid_filename(episode_data["channel_title"])
             safe_show_name = get_valid_filename(episode_data["show_title"])
             full_name_with_dir = (
@@ -661,13 +676,24 @@ def downloader(
                 / get_valid_filename(generate_episode_container_name(episode_data))
                 / name_with_extension
             )
+        if fn_mode == "archivist":
+            safe_channel_name = get_valid_filename(episode_data["channel_title"])
+            safe_show_name = get_valid_filename(episode_data["show_title"])
+            full_name_with_dir = (
+                dl_location
+                / safe_channel_name
+                / safe_show_name
+                / get_valid_filename(generate_episode_container_name(episode_data))
+                / name_with_extension
+            )
+
     else:
         print("Episode Data not found")
 
     video_options["outtmpl"] = str(full_name_with_dir)
 
     # IA Specific Task
-    if upload_to_ia:
+    if fn_mode == "ia":
         # container_location = (
         #     get_folder_location_for_ia_upload(episode_data=episode_data) + "/"
         # )
@@ -688,7 +714,7 @@ def downloader(
         # check whether every file has downloaded. specially mp4
         # upload_ia
         # SAVE SLUG to a new file for checking
-        if upload_to_ia:
+        if fn_mode == "ia":
             container_dir = full_name_with_dir.parent
             ready_for_upload = check_if_files_are_ready(directory=container_dir)
 
@@ -914,10 +940,9 @@ def show_stuff(
     password,
     vod_url,
     concurrent_fragments,
-    show_mode,
-    upload_to_ia,
     fast_check,
     use_aria,
+    fn_mode,
 ):
     if not is_tool("ffmpeg"):
         print("ffmpeg not installed, go do that")
@@ -943,7 +968,7 @@ def show_stuff(
                 f'{episode_data["id_numerical"]}: {episode_data["title"]} already recorded in archive'
             )
         else:
-            if upload_to_ia:
+            if fn_mode == "ia":
                 item_exists, identifier = check_if_ia_item_exists(
                     episode_data=episode_data
                 )
@@ -962,9 +987,8 @@ def show_stuff(
                 vod_url,
                 episode_data,
                 concurrent_fragments,
-                show_mode,
-                upload_to_ia,
                 use_aria,
+                fn_mode,
             )
 
 

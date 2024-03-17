@@ -5,22 +5,31 @@ import logging
 import os
 import validators
 from .parser import RoosterTeethParser
+from pathlib import Path
 
 
-def get_download_location(show_mode):
-    script_location = os.getcwd()
-    if show_mode is True:
-        download_location = os.path.join(script_location, "Downloads")
-    else:
-        download_location = os.path.join(script_location, "roosterteeth")
+def get_download_location(fn_mode: str) -> Path:
+    """
+    Retrieves the download location based on the show mode.
+    Args: fn_mode: show | ia | archivist
+    Returns:
+        Path: A pathlib.Path object
+    """
 
-    if not os.path.exists(download_location):
-        os.makedirs(download_location)
+    script_path = Path.cwd()
 
-    return download_location
+    if fn_mode == "show" or fn_mode == "archivist":
+        download_path = script_path / "Downloads"
+
+    if fn_mode == "ia":
+        # download_path = script_path / "roosterteeth-temp"
+        download_path = Path("~/.rooster").expanduser()
+
+    download_path.mkdir(parents=True, exist_ok=True)
+    return download_path
 
 
-current_dir = get_download_location(True)
+current_dir = get_download_location(fn_mode="show")
 log_output_file = os.path.join(current_dir, "rooster.log")
 
 
@@ -37,10 +46,9 @@ def process_links_from_file(
     password,
     filename,
     concurrent_fragments,
-    show_mode,
-    upload_to_ia,
     fast_check,
     use_aria,
+    fn_mode,
 ):
     with open(filename, "r") as file:
         links = file.readlines()
@@ -55,10 +63,9 @@ def process_links_from_file(
                 password,
                 line.strip(),
                 concurrent_fragments,
-                show_mode,
-                upload_to_ia,
                 fast_check,
                 use_aria,
+                fn_mode,
             )
         except Exception as e:
             # Log the exception
@@ -73,11 +80,10 @@ def process_links_from_list(
     password,
     episode_links,
     concurrent_fragments,
-    show_mode,
     input_value,
-    upload_to_ia,
     fast_check,
     use_aria,
+    fn_mode,
 ):
     num_links = len(episode_links)
     for index, episode in enumerate(episode_links):
@@ -88,10 +94,9 @@ def process_links_from_list(
                 password,
                 episode,
                 concurrent_fragments,
-                show_mode,
-                upload_to_ia,
                 fast_check,
                 use_aria,
+                fn_mode,
             )
         except Exception as e:
             # Log the exception
@@ -114,12 +119,16 @@ def main():
         type=int,
         help="Number of concurrent fragments (default is 10)",
     )
-    group = parser.add_mutually_exclusive_group()
+    group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument(
         "--show", action="store_true", help="Download in a Predefied Show formatting"
     )
     group.add_argument(
         "--ia", action="store_true", help="Upload to IA and delete uploaded file"
+    )
+
+    group.add_argument(
+        "--archivist", action="store_true", help="Downloads in a Archivist like fashion"
     )
     parser.add_argument(
         "--fast-check",
@@ -135,8 +144,8 @@ def main():
     parser.add_argument("input", help="URL or file containing list of links")
 
     args = parser.parse_args()
-    if args.show and args.ia:
-        parser.error("Cannot specify both --show and --ia. Please choose one.")
+    # if args.show and args.ia:
+    #     parser.error("Cannot specify both --show and --ia. Please choose one.")
 
     username = args.email
     password = args.password
@@ -144,13 +153,16 @@ def main():
     concurrent_fragments = args.concurrent_fragments
     show_flag = args.show
     upload_to_ia = args.ia
+    archivist_mode = args.archivist
     fast_check = args.fast_check
     use_aria = args.use_aria
 
     if show_flag:
-        show_mode = True
-    else:
-        show_mode = False
+        fn_mode = "show"
+    elif upload_to_ia:
+        fn_mode = "ia"
+    elif archivist_mode:
+        fn_mode = "archivist"
 
     if input_value.endswith(".txt"):
         process_links_from_file(
@@ -158,10 +170,9 @@ def main():
             password,
             input_value,
             concurrent_fragments,
-            show_mode,
-            upload_to_ia,
             fast_check,
             use_aria,
+            fn_mode,
         )
     else:
         if validators.url(input_value):
@@ -175,11 +186,10 @@ def main():
                         password,
                         episode_links,
                         concurrent_fragments,
-                        show_mode,
                         input_value,
-                        upload_to_ia,
                         fast_check,
                         use_aria,
+                        fn_mode,
                     )
                 else:
                     print(
@@ -194,10 +204,9 @@ def main():
                     password,
                     input_value,
                     concurrent_fragments,
-                    show_mode,
-                    upload_to_ia,
                     fast_check,
                     use_aria,
+                    fn_mode,
                 )
             else:
                 print("Unsupported RT URL. Only supports Series and Episodes")
