@@ -158,7 +158,7 @@ def main():
     )
     parser.add_argument(
         "--fragment-abort",
-        action="store_true",
+        action="store_false",
         help="Abort if fail to download fragment (default off)",
     )
 
