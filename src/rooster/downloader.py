@@ -112,7 +112,7 @@ def get_failed_uploaded_log_filename():
     """
 
     script_path = Path.cwd()
-    archive_log_path = script_path / "logs" / "uploaded.log"
+    archive_log_path = script_path / "logs" / "failed_upload.log"
 
     return archive_log_path
 
@@ -281,13 +281,17 @@ def generate_ia_meta(episode_data):
     first_exclusive = "First" if episode_data["is_first_content"] else "Public"
     first_exclusive_bool = True if episode_data["is_first_content"] else False
 
+    show_title = episode_data["show_title_meta"]
+    season_number = episode_data["season_number"]
+    episode_number = episode_data["episode_number"]
+
     if genres_list is not None:
         genres_list.extend(
             [
                 "Rooster Teeth",
                 first_exclusive,
                 creator,
-                episode_data["slug"],
+                show_title,
             ]
         )
         tags_string = ";".join(genres_list)
@@ -298,7 +302,7 @@ def generate_ia_meta(episode_data):
                 "Rooster Teeth",
                 first_exclusive,
                 creator,
-                episode_data["slug"],
+                show_title,
             ]
         )
         tags_string = ";".join(genres_list)
@@ -307,10 +311,6 @@ def generate_ia_meta(episode_data):
         tags_list = tags_string.split(";")
         tags_list.pop()
         tags_string = ";".join(tags_list)
-
-    show_title = episode_data["show_title_meta"]
-    season_number = episode_data["season_number"]
-    episode_number = episode_data["episode_number"]
 
     metadata = dict(
         mediatype=mediatype,
