@@ -231,7 +231,9 @@ def main():
         fn_mode = "archivist"
     elif upload_to_ia:
         fn_mode = "ia"
-        print("Upload to IA not finished Yet. Exiting...")
+        print(
+            "Upload to IA is in beta, if you find any errors please ping @fhm on discord"
+        )
         # exit()
 
     total_slugs = load_slugs_from_downloaded_log()

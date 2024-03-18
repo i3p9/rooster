@@ -1,7 +1,7 @@
 shows = [
     {
         "id": 482,
-        "title": "F＊＊KFACE Break Show",
+        "title": "F**KFACE Break Show",
         "slug": "f-kface-break-show",
         "uuid": "58ebd3c1-1477-45fb-bd54-b3a7d0288f79",
     },
@@ -43,7 +43,7 @@ shows = [
     },
     {
         "id": 369,
-        "title": "F＊＊KFACE",
+        "title": "F**KFACE",
         "slug": "f-kface",
         "uuid": "a1e355c7-2d86-4a62-a7ab-240bdae40b04",
     },
@@ -103,7 +103,7 @@ shows = [
     },
     {
         "id": 467,
-        "title": "Does it Do？",
+        "title": "Does it Do?",
         "slug": "does-it-do",
         "uuid": "e18398ed-4103-4f9a-893a-d13020d09321",
     },
@@ -301,7 +301,7 @@ shows = [
     },
     {
         "id": 496,
-        "title": "F＊＊kface Off",
+        "title": "F**kface Off",
         "slug": "f-kface-off",
         "uuid": "46910f45-2161-4936-997f-5cd438fd8e89",
     },
@@ -415,7 +415,7 @@ shows = [
     },
     {
         "id": 478,
-        "title": "How Hard Could it Be？",
+        "title": "How Hard Could it Be?",
         "slug": "how-hard-could-it-be",
         "uuid": "ad5daaaf-d1e6-4824-a55b-6292e9f6e0ac",
     },
@@ -547,7 +547,7 @@ shows = [
     },
     {
         "id": 470,
-        "title": "F＊＊KFACE Regulation Animation",
+        "title": "F**KFACE Regulation Animation",
         "slug": "f-kface-regulation-animation",
         "uuid": "9f00b7f1-6a6a-4317-a160-70153035dece",
     },
@@ -1759,7 +1759,7 @@ shows = [
     },
     {
         "id": 282,
-        "title": "Cheap Game ∕ Cheap Life",
+        "title": "Cheap Game / Cheap Life",
         "slug": "cheap-game-cheap-life",
         "uuid": "04d93acf-f564-4c53-8f81-f6e81d184d79",
     },

@@ -186,7 +186,7 @@ def get_valid_filename(name):
     return s
 
 
-def make_filename_safe(input_string):
+def make_filename_safe_unicode(input_string):
     char_mappings = {
         ":": "꞉",
         "/": "∕",
@@ -266,7 +266,7 @@ def generate_ia_meta(episode_data):
     collection = "opensource_movies"
     mediatype = "movies"
     title = episode_data["title_meta"]
-    creator = episode_data["channel_title"]
+    creator = episode_data["channel_title_meta"]
     description = episode_data["description"]
     if description is None:
         description = ""
@@ -277,13 +277,29 @@ def generate_ia_meta(episode_data):
     episode_slug = episode_data["slug"]
     original_url = f"https://roosterteeth.com/watch/{episode_slug}"
     genres_list = episode_data["genres"]
+    first_exclusive = "First" if episode_data["is_first_content"] else "Public"
+    first_exclusive_bool = True if episode_data["is_first_content"] else False
 
     if genres_list is not None:
-        genres_list.extend(["RoosterTeeth", creator, episode_data["slug"]])
+        genres_list.extend(
+            [
+                "Rooster Teeth",
+                first_exclusive,
+                creator,
+                episode_data["slug"],
+            ]
+        )
         tags_string = ";".join(genres_list)
-    else:  # TODO:256 byte fix
+    else:
         genres_list = []
-        genres_list.extend(["RoosterTeeth", creator, episode_data["slug"]])
+        genres_list.extend(
+            [
+                "Rooster Teeth",
+                first_exclusive,
+                creator,
+                episode_data["slug"],
+            ]
+        )
         tags_string = ";".join(genres_list)
 
     while len(tags_string.encode("utf-8")) > 255:
@@ -308,6 +324,7 @@ def generate_ia_meta(episode_data):
         show_title=show_title,
         season=int(season_number),
         episode=int(episode_number),
+        firstExclusive=first_exclusive_bool,
         scanner="Rooster - Roosterteeth Website Mirror 0.2.0b",
     )
     return metadata
@@ -327,7 +344,6 @@ def has_video_and_image(directory) -> bool:
 
 def check_if_files_are_ready(directory) -> bool:
     mp4_files = list(directory.glob("*.mp4"))
-    incomplete_files = False
     parts = [
         "*.part",
         "*.f303.*",
@@ -345,7 +361,7 @@ def check_if_files_are_ready(directory) -> bool:
         temp_files.extend(directory.glob(f"*.{file_type}"))
 
     if mp4_files:
-        if not incomplete_files:
+        if not temp_files:
             return True
     return False
 
@@ -759,7 +775,7 @@ def downloader(
         if has_video_and_image(
             full_name_with_dir.parent
         ):  # checks for mp4 and jpg/png existance
-            print("Has Image/Video file, saving to downloaded log")
+            print("Downloads include image/video file, saving to downloaded log")
             save_successful_downloaded_slugs(slug=episode_data["slug"])
 
         # check whether every file has downloaded. specially mp4
@@ -770,7 +786,7 @@ def downloader(
             ready_for_upload = check_if_files_are_ready(directory=container_dir)
 
             if ready_for_upload:
-                print("Directory contains .mp4 files. Uploading")
+                print("Directory contains mp4 file and no parts, Uploading")
                 upload_status = upload_ia(
                     directory_location=container_dir,
                     md=ia_metadata,
@@ -855,7 +871,7 @@ def get_episode_data_from_api(url):
         uuid = episode_obj.get("uuid")
         episode_type = episode_obj.get("type")
         attributes = episode_obj.get("attributes", {})
-        title = make_filename_safe(attributes.get("title"))
+        title = make_filename_safe_unicode(attributes.get("title"))
         title_meta = attributes.get("title")
         channel_id = attributes.get("channel_id")
         season_id = attributes.get("season_id")
@@ -863,7 +879,7 @@ def get_episode_data_from_api(url):
         is_first_content = attributes.get("is_sponsors_only")
         show_id = attributes.get("show_id")
         parent_slug = attributes.get("parent_content_slug", "")
-        show_title = make_filename_safe(get_show_name_from_id(show_id))
+        show_title = make_filename_safe_unicode(get_show_name_from_id(show_id))
         show_title_meta = get_show_name_from_id(show_id)
         episode_number = attributes.get("number")
         season = attributes.get("season_number", "99")
@@ -879,7 +895,7 @@ def get_episode_data_from_api(url):
             if "T" in original_air_date_full
             else None
         )
-        channel_title = make_filename_safe(get_channel_name_from_id(channel_id))
+        channel_title = make_filename_safe_unicode(get_channel_name_from_id(channel_id))
         channel_title_meta = get_channel_name_from_id(channel_id)
         description = attributes.get("description")
         slug = attributes.get("slug")
@@ -948,13 +964,13 @@ def get_episode_data_from_rt_api(url):
 
         episode_type = episode_obj.get("type")
         attributes = episode_obj.get("attributes", {})
-        title = make_filename_safe(attributes.get("title"))
+        title = make_filename_safe_unicode(attributes.get("title"))
         title_meta = attributes.get("title")
         channel_id = attributes.get("channel_id")
         original_air_date_full = attributes.get("original_air_date", "")
         is_first_content = attributes.get("is_sponsors_only")
         show_id = attributes.get("show_id")
-        show_title = make_filename_safe(get_show_name_from_id(show_id))
+        show_title = make_filename_safe_unicode(get_show_name_from_id(show_id))
         show_title_meta = get_show_name_from_id(show_id)
         season_id = attributes.get("season_id")
         parent_slug = attributes.get("parent_content_slug", "")
@@ -973,7 +989,7 @@ def get_episode_data_from_rt_api(url):
             if "T" in original_air_date_full
             else None
         )
-        channel_title = make_filename_safe(get_channel_name_from_id(channel_id))
+        channel_title = make_filename_safe_unicode(get_channel_name_from_id(channel_id))
         channel_title_meta = get_channel_name_from_id(channel_id)
         description = attributes.get("description")
         slug = attributes.get("slug")
@@ -1105,7 +1121,7 @@ def upload_ia(directory_location, md, episoda_data, keep_after_upload):
             # Check if the URL ends with '.mp4'
             if response.url.endswith(".mp4"):
                 print(
-                    f"Uploaded Successfully at https://archive.org/details/{identifier_ia}"
+                    f"{md['title']}Uploaded Successfully at https://archive.org/details/{identifier_ia}"
                 )
                 VIDEO_OKAY = True
 
