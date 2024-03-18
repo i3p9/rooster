@@ -33,7 +33,7 @@ def get_download_location(fn_mode: str) -> Path:
 
     if fn_mode == "ia":
         # download_path = script_path / "roosterteeth-temp"
-        download_path = Path("~/.rooster").expanduser()
+        download_path = script_path / "rooster_temp"
 
     download_path.mkdir(parents=True, exist_ok=True)
     return download_path
