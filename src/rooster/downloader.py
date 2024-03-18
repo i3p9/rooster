@@ -4,9 +4,10 @@ import logging
 from urllib.parse import urlparse
 import requests
 import shutil
+import json
 import yt_dlp
 
-from .channels import get_channel_name_from_id  # fod debug
+from .channels import get_channel_name_from_id
 from .shows import get_show_name_from_id
 
 from urllib3.exceptions import MaxRetryError, NewConnectionError
@@ -1032,6 +1033,7 @@ def show_stuff(
     total_slugs,
     ignore_existing,
     keep_after_upload,
+    update_metadata,
 ):
     if not is_tool("ffmpeg"):
         print("ffmpeg not installed, go do that")
@@ -1048,6 +1050,17 @@ def show_stuff(
     if episode_data is None:
         alt_api_url = get_api_url(url=vod_url)
         episode_data = get_episode_data_from_api(alt_api_url)
+
+    # update meta:
+    if update_metadata is True:
+        item_exists, identifier = check_if_ia_item_exists(episode_data=episode_data)
+        if item_exists is False:
+            print(f"Item doesn't exist yet, can't update metadata for {vod_url}")
+            logging.info(f"Item doesn't exist yet, can't update metadata for {vod_url}")
+            return
+        else:
+            update_ia_metadata(episode_data)
+            return
 
     if episode_data is None:
         print("Both API Failed.. Skipping...")
@@ -1168,3 +1181,45 @@ def upload_ia(directory_location, md, episoda_data, keep_after_upload):
         logging.critical(f"An unexpected error occurred: {e}")
 
     return False
+
+
+def update_ia_metadata(episode_data):
+    ia_meta = generate_ia_meta(episode_data=episode_data)
+    identifier_ia = get_itemname(data=episode_data)
+    ia_meta.pop("mediatype")
+    ia_meta.pop("collection")
+
+    item = internetarchive.get_item(identifier=identifier_ia)
+    r = item.modify_metadata(metadata=ia_meta, debug=False)
+
+    if r.status_code == 200:
+        print("Update successfully queued!")
+        return True
+    else:
+        if r.text:
+            parsed = json.loads(r.text)
+            print(f"Error: {parsed['error']}")
+
+        else:
+            print(
+                "something went wrong while updating metadata. Permission issue? r u owner of the item?"
+            )
+    return False
+
+
+# Debug
+# show_stuff(
+#     username="raptorh2000@gmail.com",
+#     password="PASSWORD",
+#     vod_url="https://roosterteeth.com/watch/gameplay-2018-dollal",
+#     concurrent_fragments=10,
+#     fast_check=True,
+#     use_aria=False,
+#     fn_mode="ia",
+#     fragment_retries=10,
+#     fragment_abort=False,
+#     total_slugs="slugs",
+#     ignore_existing=True,
+#     keep_after_upload=True,
+#     update_metadata=True,
+# )

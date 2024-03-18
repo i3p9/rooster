@@ -73,6 +73,7 @@ def process_links_from_file(
     total_slugs,
     ignore_existing,
     keep_after_upload,
+    update_metadata,
 ):
     with open(filename, "r") as file:
         links = file.readlines()
@@ -93,6 +94,9 @@ def process_links_from_file(
                 fragment_retries,
                 fragment_abort,
                 total_slugs,
+                ignore_existing,
+                keep_after_upload,
+                update_metadata,
             )
         except Exception as e:
             # Log the exception
@@ -116,6 +120,7 @@ def process_links_from_list(
     total_slugs,
     ignore_existing,
     keep_after_upload,
+    update_metadata,
 ):
     num_links = len(episode_links)
     for index, episode in enumerate(episode_links):
@@ -134,6 +139,7 @@ def process_links_from_list(
                 total_slugs,
                 ignore_existing,
                 keep_after_upload,
+                update_metadata,
             )
         except Exception as e:
             # Log the exception
@@ -194,6 +200,12 @@ def main():
     )
 
     parser.add_argument(
+        "--update-meta",
+        action="store_true",
+        help="Only update metadata, nothing else",
+    )
+
+    parser.add_argument(
         "--fragment-retries",
         default=10,
         type=int,
@@ -224,6 +236,7 @@ def main():
     fragment_abort = args.fragment_abort
     ignore_existing = args.i
     keep_after_upload = args.keep_uploads
+    update_metadata = args.update_meta
 
     if show_flag:
         fn_mode = "show"
@@ -252,6 +265,7 @@ def main():
             total_slugs,
             ignore_existing,
             keep_after_upload,
+            update_metadata,
         )
     else:
         if validators.url(input_value):
@@ -274,6 +288,7 @@ def main():
                         total_slugs,
                         ignore_existing,
                         keep_after_upload,
+                        update_metadata,
                     )
                 else:
                     print(
@@ -296,6 +311,7 @@ def main():
                     total_slugs=total_slugs,
                     ignore_existing=ignore_existing,
                     keep_after_upload=keep_after_upload,
+                    update_metadata=update_metadata,
                 )
             else:
                 print("Unsupported RT URL. Only supports Series and Episodes")
