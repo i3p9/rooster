@@ -245,7 +245,7 @@ def main():
     elif upload_to_ia:
         fn_mode = "ia"
         print(
-            "Upload to IA is in beta, if you find any errors please ping @fhm on discord"
+            "Upload to IA is in beta, if you find any errors please ping @fhm on discord. id: 0.2.0b-a"
         )
         # exit()
 

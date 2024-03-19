@@ -3,6 +3,7 @@ import re
 import logging
 from urllib.parse import urlparse
 import requests
+from datetime import datetime
 import shutil
 import json
 import yt_dlp
@@ -178,6 +179,36 @@ def extract_data_from_ytdl_dict(info_dict):
         "is_first_content": is_first_content,
         "large_thumbnail_url_ytdl": large_thumbnail_url_ytdl,
     }
+
+
+def check_if_channel_is_ah(date_str) -> bool:
+    # Convert string to datetime object
+    date = datetime.strptime(date_str, "%Y-%m-%d")
+
+    # Specify the comparison date
+    comparison_date = datetime(2023, 10, 6)
+
+    # Compare the dates
+    return date < comparison_date
+
+
+def format_iso8601(date_string):
+    """
+    Formats a date string in YYYYMMDD format to YYYY-MM-DD format.
+    Args:
+        date_string: The date string in YYYYMMDD (iso8601) format.
+    Returns:
+        date string in YYYY-MM-DD, or the original string if invalid.
+    """
+
+    if len(date_string) != 8:
+        return date_string
+
+    year = date_string[0:4]
+    month = date_string[4:6]
+    day = date_string[6:8]
+
+    return f"{year}-{month}-{day}"
 
 
 # for ia
@@ -613,6 +644,55 @@ def download_thumb_from_yt_dlp_data(extractor_options, vod_url, episode_data, fn
         return thumbnail_success
 
 
+def generate_download_filename_and_dir(episode_data, fn_mode) -> Path:
+
+    # Step 2: Generate File Name
+    # Two type of file name:
+    # Show Mode: For keeping files
+    # IA Mode: For uploading to IA, and deleting afterwards
+    file_name = generate_file_name(
+        data=episode_data,
+        fn_mode=fn_mode,
+    )
+    name_with_extension = file_name + ".%(ext)s"
+
+    # Step 3: Download directory
+    # Downloads folder if fn_mode is show | archivist
+    # ~/.roosterteeth folder if if fn_mode is ia
+    dl_location = get_download_location(fn_mode=fn_mode)
+
+    # Step 4: Generate full download directory
+    if fn_mode == "show":
+        # Channel Name / Show Title / Sxx / YYYY-MM-DD [ID] / Filename
+        full_name_with_dir = (
+            dl_location / episode_data["channel_title"] / episode_data["show_title"]
+        )
+        full_name_with_dir /= get_season_name(episode_data["season_number"])
+        full_name_with_dir /= generate_episode_container_name(episode_data, fn_mode)
+        full_name_with_dir /= name_with_extension
+
+    if fn_mode == "ia":
+        safe_channel_name = get_valid_filename(episode_data["channel_title"])
+        safe_show_name = get_valid_filename(episode_data["show_title"])
+        full_name_with_dir = (
+            dl_location
+            / get_valid_filename(generate_episode_container_name(episode_data, fn_mode))
+            / name_with_extension
+        )
+
+    if fn_mode == "archivist":
+        safe_channel_name = get_valid_filename(episode_data["channel_title"])
+        safe_show_name = get_valid_filename(episode_data["show_title"])
+        full_name_with_dir = (
+            dl_location
+            / safe_channel_name
+            / safe_show_name
+            / get_valid_filename(generate_episode_container_name(episode_data, fn_mode))
+            / name_with_extension
+        )
+    return full_name_with_dir
+
+
 def downloader(
     username,
     password,
@@ -650,10 +730,6 @@ def downloader(
         "sleep_interval": 3,
         "max_sleep_interval": 5,
     }
-    extractor_options = {
-        "username": username,
-        "password": password,
-    }
 
     ## use aria2c if it exists in system
     if use_aria is True:
@@ -689,16 +765,7 @@ def downloader(
         # step 1: Download Thumbnail
         if episode_data["large_thumb"]:
             try:
-                thumbnail_success = download_thumbnail(
-                    episode_data["large_thumb"], episode_data, fn_mode
-                )
-                if not thumbnail_success:
-                    download_thumb_from_yt_dlp_data(
-                        extractor_options=extractor_options,
-                        vod_url=vod_url,
-                        episode_data=episode_data,
-                        fn_mode=fn_mode,
-                    )
+                download_thumbnail(episode_data["large_thumb"], episode_data, fn_mode)
             except FileNotFoundError as fnf_err:
                 print(f"Error with file location or sth {fnf_err}")
                 logging.warning(f"Error with file location error {fnf_err}")
@@ -707,68 +774,20 @@ def downloader(
                 logging.warning("Error Downloading HQ Thumbs. Will download LQ Thumb")
                 video_options["writethumbnail"] = True
 
-        # Step 2: Generate File Name
-        # Two type of file name:
-        # Show Mode: For keeping files
-        # IA Mode: For uploading to IA, and deleting afterwards
-        file_name = generate_file_name(
-            data=episode_data,
-            fn_mode=fn_mode,
+        full_name_with_dir = generate_download_filename_and_dir(
+            episode_data=episode_data, fn_mode=fn_mode
         )
-        name_with_extension = file_name + ".%(ext)s"
-
-        # Step 3: Download directory
-        # Downloads folder if fn_mode is show | archivist
-        # ~/.roosterteeth folder if if fn_mode is ia
-        dl_location = get_download_location(fn_mode=fn_mode)
-
-        # Step 4: Generate full download directory
-        if fn_mode == "show":
-            # Channel Name / Show Title / Sxx / YYYY-MM-DD [ID] / Filename
-            full_name_with_dir = (
-                dl_location / episode_data["channel_title"] / episode_data["show_title"]
-            )
-            full_name_with_dir /= get_season_name(episode_data["season_number"])
-            full_name_with_dir /= generate_episode_container_name(episode_data, fn_mode)
-            full_name_with_dir /= name_with_extension
-
-        if fn_mode == "ia":
-            safe_channel_name = get_valid_filename(episode_data["channel_title"])
-            safe_show_name = get_valid_filename(episode_data["show_title"])
-            full_name_with_dir = (
-                dl_location
-                / get_valid_filename(
-                    generate_episode_container_name(episode_data, fn_mode)
-                )
-                / name_with_extension
-            )
-        if fn_mode == "archivist":
-            safe_channel_name = get_valid_filename(episode_data["channel_title"])
-            safe_show_name = get_valid_filename(episode_data["show_title"])
-            full_name_with_dir = (
-                dl_location
-                / safe_channel_name
-                / safe_show_name
-                / get_valid_filename(
-                    generate_episode_container_name(episode_data, fn_mode)
-                )
-                / name_with_extension
-            )
-
     else:
-        print("Episode Data not found")
+        print("Episode Data not found, skipping...")
 
     video_options["outtmpl"] = str(full_name_with_dir)
 
     # IA Specific Task
     if fn_mode == "ia":
-        # container_location = (
-        #     get_folder_location_for_ia_upload(episode_data=episode_data) + "/"
-        # )
         ia_metadata = generate_ia_meta(episode_data=episode_data)
 
     # pass off to yt-dlp for downloading
-    print("Starting download: ", full_name_with_dir)
+    print("Starting download: ", episode_data["title"])
     try:
         yt_dlp.YoutubeDL(video_options).download(vod_url)
         print(f"{episode_data['id_numerical']} Downloaded successfully {vod_url}")
@@ -776,18 +795,17 @@ def downloader(
         if has_video_and_image(
             full_name_with_dir.parent
         ):  # checks for mp4 and jpg/png existance
-            print("Downloads include image/video file, saving to downloaded log")
+            print("Downloads includes image/video file, saving to downloaded log")
             save_successful_downloaded_slugs(slug=episode_data["slug"])
 
         # check whether every file has downloaded. specially mp4
-        # upload_ia
-        # SAVE SLUG to a new file for checking
+        # SAVE SLUG to a new file for fast-check
         if fn_mode == "ia":
             container_dir = full_name_with_dir.parent
             ready_for_upload = check_if_files_are_ready(directory=container_dir)
 
             if ready_for_upload:
-                print("Directory contains mp4 file and no parts, Uploading")
+                print("Directory contains mp4 file and no incomplete parts, Uploading.")
                 upload_status = upload_ia(
                     directory_location=container_dir,
                     md=ia_metadata,
@@ -902,6 +920,13 @@ def get_episode_data_from_api(url):
         slug = attributes.get("slug")
         genres = attributes.get("genres")
 
+        # Check f__ckfacery
+        if show_title_meta == "Let's Play":
+            is_ah = check_if_channel_is_ah(original_air_date)
+            if is_ah:
+                channel_title = "Achievement Hunter"
+                channel_title_meta = "Achievement Hunter"
+
         return {
             "id_numerical": episode_id,
             "title": title,
@@ -978,6 +1003,13 @@ def get_episode_data_from_rt_api(url):
         season = attributes.get("season_number", "99")
         episode_number = attributes.get("number")
 
+        # Check f__ckfacery
+        if show_title_meta == "Let's Play":
+            is_ah = check_if_channel_is_ah(original_air_date)
+            if is_ah:
+                channel_title = "Achievement Hunter"
+                channel_title_meta = "Achievement Hunter"
+
         if season_id:
             large_thumb_alt = (
                 f"https://cdn.ffaisal.com/thumbnail/{show_id}/{season_id}/{uuid}.jpg"
@@ -1020,6 +1052,84 @@ def get_episode_data_from_rt_api(url):
         return None
 
 
+def process_yt_dlp_info_dict(data):
+    title_meta = data["title"]
+    title = make_filename_safe_unicode(data["title"])
+    description = data["description"]
+    id_numerical = data["id"]
+    original_air_date = format_iso8601(data["release_date"])  # in unix
+    show_title_meta = data["series"]
+    show_title = make_filename_safe_unicode(data["series"])
+    is_first_content = False if data["availability"] == "public" else True
+    channel_id = data["channel_id"]
+    channel_title = make_filename_safe_unicode(get_channel_name_from_id(channel_id))
+    channel_title_meta = get_channel_name_from_id(channel_id)
+    season_number = data["season_number"] if data["season_number"] is not None else 99
+    episode_number = data["episode_number"]
+    episode_type = "bonus_feature" if "bonus" in id_numerical else "episode"
+    genres = data["tags"]
+    slug = data["webpage_url_basename"]
+    thumbnails = data["thumbnails"]
+    large_thumbnail_url = None
+    for thumbnail in thumbnails:
+        if thumbnail["id"] == "large":
+            large_thumbnail_url = thumbnail["url"]
+            break
+
+    # Check f__ckfacery
+    if show_title_meta == "Let's Play":
+        is_ah = check_if_channel_is_ah(original_air_date)
+        if is_ah:
+            channel_title = "Achievement Hunter"
+            channel_title_meta = "Achievement Hunter"
+
+    return {
+        "id_numerical": id_numerical,
+        "title": title,
+        "original_air_date": original_air_date,
+        "show_title": show_title,
+        "show_title_meta": show_title_meta,
+        "title_meta": title_meta,
+        "is_first_content": is_first_content,
+        "channel_title": channel_title,
+        "channel_title_meta": channel_title_meta,
+        "large_thumb": large_thumbnail_url,
+        "large_thumb_alt": large_thumbnail_url,
+        "season_number": season_number,
+        "episode_number": episode_number,
+        "episode_type": episode_type,
+        "description": description,
+        "slug": slug,
+        "genres": genres,
+    }
+
+
+def get_episode_data_from_ydl(username, password, vod_url):
+    yt_dlp_options = {
+        "username": username,
+        "password": password,
+    }
+    info = yt_dlp.YoutubeDL(yt_dlp_options).extract_info(url=vod_url, download=False)
+    episode_data = process_yt_dlp_info_dict(info)
+    return episode_data
+
+
+# def alt_downloader(username, password, vod_url):
+#     yt_dlp_options = {
+#         "username": username,
+#         "password": password,
+#     }
+#     with yt_dlp.YoutubeDL(yt_dlp_options) as ydl:
+#         info = ydl.extract_info(vod_url, download=False)
+#         episode_data = process_yt_dlp_info_dict(data=info, slug="test-slug")
+#         full_name_with_dir = generate_download_filename_and_dir(
+#             episode_data=episode_data, fn_mode="ia"
+#         )
+#         dis = str(full_name_with_dir)
+#         yt_dlp_options["outtmpl"] = dis
+#         ydl.download(vod_url)
+
+
 def show_stuff(
     username,
     password,
@@ -1044,12 +1154,19 @@ def show_stuff(
             print(f"{vod_url}: URL already recorded in downloaded log")
             return
 
-    api_url = get_rt_api_url(url=vod_url)
     episode_data = None
-    episode_data = get_episode_data_from_rt_api(api_url)
+    episode_data = get_episode_data_from_ydl(
+        vod_url=vod_url, username=username, password=password
+    )
+
     if episode_data is None:
-        alt_api_url = get_api_url(url=vod_url)
-        episode_data = get_episode_data_from_api(alt_api_url)
+        print("Primary method failed, trying secondary methods")
+        api_url = get_rt_api_url(url=vod_url)
+        episode_data = get_episode_data_from_rt_api(api_url)
+        if episode_data is None:
+            print("Secondary method failed yikes, trying last resort")
+            alt_api_url = get_api_url(url=vod_url)
+            episode_data = get_episode_data_from_api(alt_api_url)
 
     # update meta:
     if update_metadata is True:
@@ -1063,7 +1180,7 @@ def show_stuff(
             return
 
     if episode_data is None:
-        print("Both API Failed.. Skipping...")
+        print("All 3 API Failed.. Skipping...")
     else:
         if exists_in_archive(episode_data):
             print(
@@ -1077,9 +1194,6 @@ def show_stuff(
                     )
                     if item_exists is True:
                         print(
-                            f"Item already exists at https://archive.org/details/{identifier}"
-                        )
-                        logging.info(
                             f"Item already exists at https://archive.org/details/{identifier}"
                         )
                         return
@@ -1223,3 +1337,19 @@ def update_ia_metadata(episode_data):
 #     keep_after_upload=True,
 #     update_metadata=True,
 # )
+
+
+# links = [
+#     "https://roosterteeth.com/watch/lets-play-2023-worms",
+#     "https://roosterteeth.com/watch/lets-play-2023-9-30",
+# ]
+
+# for link in links:
+#     episode_data = get_episode_data_from_ydl(
+#         username="raptorh2000@gmail.com",
+#         password="PASSWORD",
+#         vod_url=link,
+#     )
+#     print(
+#         f"Title: {episode_data['title_meta']} | Release: {episode_data['original_air_date']} | Show: {episode_data['show_title']} | Channel: {episode_data['channel_title']}"
+#     )
