@@ -315,6 +315,9 @@ def main():
                 )
             else:
                 print("Unsupported RT URL. Only supports Series and Episodes")
+                logging.warning(
+                    f"{input_value}-  Unsupported RT URL. Only supports Series and Episodes"
+                )
                 exit()
         else:
             print(f"invalid url: {input_value}. Exiting.")
