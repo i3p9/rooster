@@ -133,7 +133,7 @@ Other parameters:
  `--use-aria`: uses [aria2](https://aria2.github.io/) to download using an alternate fragmenting utility. From our testing, this does not result in faster speeds than default - in fact, it is usually slower.
 
 `--fragment-retries XX`: Where `XX` is a number, this determines how many times each video fragment will retry downloading after failing. If your connection is spotty or your downloads keep failing, adding this argument might help.
-`--fragment-abort`: Setting that stops the program if rooster fails to download all fragments of a video. Default is ON, passing this flag turns it OFF (program will continue)
+`--skip-corrupt-fragments`: Setting that allows the program to continue if rooster fails to download all fragments of a video. By default, rooster *will* stop if it cannot download a fragment correctly.
 
 ---
 `README.md` written by @schmintendo and @c3someran, based on @snakepeeker's initial tutorial
