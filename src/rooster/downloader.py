@@ -19,6 +19,18 @@ from pathlib import Path
 import internetarchive
 
 
+class bcolors:
+    HEADER = "\033[95m"
+    OKBLUE = "\033[94m"
+    OKCYAN = "\033[96m"
+    OKGREEN = "\033[92m"
+    WARNING = "\033[93m"
+    FAIL = "\033[91m"
+    ENDC = "\033[0m"
+    BOLD = "\033[1m"
+    UNDERLINE = "\033[4m"
+
+
 def get_download_location(fn_mode: str) -> Path:
     """
     Retrieves the download location based on the show mode.
@@ -248,10 +260,11 @@ def is_tool(name):
 
 def get_itemname(data) -> str:
     # roosterteeth-test appended for test purposes. -test will be removed
-    if data["episode_type"] == "bonus_feature":
-        return f"roosterteeth-{data['id_numerical']}-bonus"
-    else:
-        return f"roosterteeth-{data['id_numerical']}"
+    return data["id_numerical"]
+    # if data["episode_type"] == "bonus_feature":
+    #     return f"roosterteeth-{data['id_numerical']}-bonus"
+    # else:
+    #     return f"roosterteeth-{data['id_numerical']}"
 
 
 def get_folder_location_for_ia_upload(episode_data) -> str:
@@ -401,10 +414,7 @@ def check_if_files_are_ready(directory) -> bool:
 def generate_file_name(data, fn_mode) -> str:
     episode_number = get_episode_number(data["episode_number"])
     season_number = get_season_name(data["season_number"])
-    if data["episode_type"] == "bonus_feature":
-        proper_id = f"{data['id_numerical']}-bonus"
-    else:
-        proper_id = f"{data['id_numerical']}"
+    proper_id = f"{data['id_numerical']}"
 
     if fn_mode == "show":
         if data["is_first_content"] is True:
@@ -436,10 +446,7 @@ def get_episode_number(episode):
 
 
 def generate_episode_container_name(data, fn_mode) -> str:
-    if data["episode_type"] == "bonus_feature":
-        proper_id = f"{data['id_numerical']}-bonus"
-    else:
-        proper_id = f"{data['id_numerical']}"
+    proper_id = f"{data['id_numerical']}"
 
     return f"{data['original_air_date']} - {proper_id}"
 
@@ -889,6 +896,9 @@ def get_episode_data_from_api(url):
         episode_id = episode_obj.get("id")
         uuid = episode_obj.get("uuid")
         episode_type = episode_obj.get("type")
+        if episode_type == "bonus_feature":
+            episode_id = f"{episode_id}-bonus"
+
         attributes = episode_obj.get("attributes", {})
         title = make_filename_safe_unicode(attributes.get("title"))
         title_meta = attributes.get("title")
@@ -989,6 +999,10 @@ def get_episode_data_from_rt_api(url):
         large_thumb = get_high_quality_thumbnail_link(images)
 
         episode_type = episode_obj.get("type")
+
+        if episode_type == "bonus_feature":
+            episode_id = f"{episode_id}-bonus"
+
         attributes = episode_obj.get("attributes", {})
         title = make_filename_safe_unicode(attributes.get("title"))
         title_meta = attributes.get("title")
@@ -1194,7 +1208,7 @@ def show_stuff(
                     )
                     if item_exists is True:
                         print(
-                            f"Item already exists at https://archive.org/details/{identifier}"
+                            f"{bcolors.OKBLUE}Item already exists at https://archive.org/details/{identifier}{bcolors.ENDC}"
                         )
                         return
 
@@ -1214,7 +1228,6 @@ def show_stuff(
 
 def upload_ia(directory_location, md, episoda_data, keep_after_upload):
     identifier_ia = get_itemname(episoda_data)
-
     # TODO: parse ia_config file
 
     # if None in {s3_access_key, s3_secret_key}:
@@ -1248,7 +1261,7 @@ def upload_ia(directory_location, md, episoda_data, keep_after_upload):
             # Check if the URL ends with '.mp4'
             if response.url.endswith(".mp4"):
                 print(
-                    f"{md['title']}Uploaded Successfully at https://archive.org/details/{identifier_ia}"
+                    f"{bcolors.OKGREEN}{md['title']}Uploaded Successfully at https://archive.org/details/{identifier_ia}{bcolors.ENDC}"
                 )
                 VIDEO_OKAY = True
 
@@ -1257,7 +1270,7 @@ def upload_ia(directory_location, md, episoda_data, keep_after_upload):
         if successful_uploads == 0:
             save_failed_upload_url_slugs(md["originalUrl"])
             print(
-                "something went wrong with the uploads. if you are updating existing item, ignore this. And any NoneType Error"
+                "Something went wrong with the uploads. if you are updating existing item, ignore this. And any NoneType Error"
             )
 
         return VIDEO_OKAY
