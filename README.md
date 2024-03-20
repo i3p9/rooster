@@ -1,9 +1,12 @@
+
 # Standardized Rooster Teeth Site Download Tutorial 
 ####  (edited from tubeup tutorial by Snakepeeker)
 
-The intention of this document is to make it very easy for those with little or no experience using scripts or PowerShell to understand and use Rooster for pulling videos from roosterteeth.com in a standardized fashion as decided by folks of the Archive of Pimps Discord server.
+[Archive of Pimps Discord](https://discord.gg/SHCURNvG8v)
 
-NOTE: It is a good idea (and sometimes necessary) to close and reopen PowerShell after installing items.
+The intention of this document is to make it very easy for those with little or no experience using scripts or PowerShell to understand and use Rooster for downloading videos from roosterteeth.com in a *standardized fashion* as decided by folks of the Archive of Pimps Discord server.
+
+> NOTE: It is a good idea (and sometimes necessary) to close and reopen PowerShell after installing items.
 
 Any text in code blocks `like this` are meant to be input into the PowerShell terminal.
 
@@ -12,8 +15,15 @@ Any text in code blocks `like this` are meant to be input into the PowerShell te
  1. Run PowerShell as Administrator, by pressing <kbd>Windows</kbd> + <kbd>X</kbd>, and choosing *"Powershell (Adminstrator)"*.  It might also be labeled *"Terminal (Administrator)"*.
 
 
-2. Install Chocolatey following these 5 steps: https://chocolatey.org/install
-	- Step 2 is important in particular
+2. Install Chocolatey: (adapted from https://chocolatey.org/install)
+    1. First, ensure that you are using Powershell (Administrator) as discussed in the previous step.
+    2. ```Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))```
+Paste the copied text into your shell and press Enter.
+Wait a few seconds for the command to complete.
+If you don't see any errors, you are ready to use Chocolatey! Type choco or choco -? now, or see Getting Started for usage instructions.
+	
+
+
 
 3. Restart Powershell and reopen as Admin 
 	
@@ -26,17 +36,15 @@ Any text in code blocks `like this` are meant to be input into the PowerShell te
  1. Make sure pip is installed:
   `py -m pip install -U pip`
 
-2. Restart Powershell and reopen as Admin
-
-3. Then install setuptools 
+2. Then install setuptools 
  `pip install setuptools`
 
-4. Restart Powershell and reopen as Admin
+3. Restart Powershell and reopen as Admin
 
-5. Install Git via Chocolatey (source: https://community.chocolatey.org/packages/git.install#install)
+4. Install Git via Chocolatey (source: https://community.chocolatey.org/packages/git.install#install)
  `choco install git.install`
 
-6. Restart Powershell and reopen as Admin
+5. Restart Powershell and reopen as Admin
 ## Installing ffmpeg
 This is not in PowerShell, open your browser and open the link below. Then click the appropriate button for Windows, Linux or Mac. 
 > If you don't know which one you want, you probably want Windows x64
@@ -74,12 +82,14 @@ How to install Rooster (edited from [this Discord post](https://discord.com/chan
 
 3. Optional - create a textfile "filelist.txt" (the name does not matter) to dump links into for the script to reference. When you see "filelist.txt" in the command this is the file its referencing.
 
+> [The Discord](https://discord.gg/SHCURNvG8v) has lists of links to work on.
+
 4. Once in PowerShell, run the script using this line, changing your email and password as necessary (keep the quotation marks)
 `rooster --email "your@email.com" --password "your-password" --show url or filelist.txt`
 
 5. It will download the files in a new folder, from where you ran it from along with all necessary data.
 
-6. You can either put a url: https://roosterteeth.com/watch/xxx(has to be episode url, not season url)
+6. You can either put a url: https://roosterteeth.com/watch/xxx (must be episode url, not season url)
 Or a list of links, e.g. funhaus_first.txt which contains a list of all funhaus first episodes.
 **For this project, we are assigning groups of videos by text file, so use those.**
 
@@ -89,18 +99,41 @@ Examples:
 ` rooster --email "caboose@RVB.com" --password "sargesucks2" --show rwby_links.txt`
 
 This example is only for archiving individual videos or shows.  You can use it, but for archiving with us please use the above line.
-` rooster --email "caboose@RVB.com" --password "sargesucks22" --show https://roosterteeth.com/watch/so-alright-2024-sa29`
+` rooster --email "caboose@RVB.com" --password "sargesucks2" --show https://roosterteeth.com/watch/so-alright-2024-sa29`
 
-## Advanced Options
-#### Don't use these unless you know what you're doing!
+If using a list of files, (e.g. `filelist.txt`) it must be in your [current working directory](https://www.computerhope.com/jargon/c/currentd.htm). (type `pwd` if you're not sure where you are)
+
+### Arguments for downloading Rooster Teeth content locally
+ `--show`:  Assumes show mode, which will download the episode to their respective show folder.
+ > ❗❗❗`--show` is required if you want to contribute your downloads to the Archive of Pimps project. ❗❗❗
+ 
+ `--concurrent-fragments XX`: Where `XX` is a number, this determines how many concurrent fragments you will download at a time from Rooster Teeth's website.  Default is 10.
+ 
+ `--fast-check`: Checks if the program has already downloaded and uploaded a video to archive.org, and if so, skips it.
+
+ 
+### Arguments for uploading Rooster Teeth site content to archive.org 
+ `--ia`: triggers uploading to archive.org.  By default, this also deletes the download on the local system after uploading.
+
+`--concurrent-fragments XX`: Where `XX` is a number, this determines how many concurrent fragments you will download at a time from Rooster Teeth's website.  Default is 10.
+ `--fast-check`: Unknown
+ `--keep-uploads`: retains a local copy of uploaded content.
+ > NOTE: `--keep-uploads` uses a different file structure than the local downloader (`--show`), so it is not suitable for local backup. Its ideal usecase is if your archive.org uploads fail often.
+
+
+`--i`: Ignore existing uploaded items. Works in the same way as [tubeup](https://github.com/bibanon/tubeup)'s `--ignore-existing-item` — if a file is missing on a upload, you can re-run the problem link with `-i` to fill in the gaps. Only works with uploads on **YOUR** account.
+> NOTE: only use this if your archive.org uploads have failed, or are missing files. **Never use when running the script for the first time.**
+
+### Advanced/Other Options
+#### ***Don't use these unless you know what you're doing!***
 Other parameters:
-> `--show`:  Assumes show mode, which will download the episode to their respective Show folder inside Downloads
-limitations: if we fall back to data parser 3, it will not work and use the default directory mode.
+ 
+ `--update-meta`: Optional: If you notice problems with your METADATA ***on archive.org only***, then run this. **DO NOT** bulk update your archives, only use this flag for problem links.
+ 
+ `--use-aria`: uses [aria2](https://aria2.github.io/) to download using an alternate fragmenting utility. From our testing, this does not result in faster speeds than default - in fact, it is usually slower.
 
-> the filelist.txt should be in the directory that PowerShell is working in. (type `pwd` if you're not sure where you are)
-
-> `--concurrent-fragments`: NUMBER , default is 10 if you don't put anything. Should be good enough.
-
+`--fragment-retries XX`: Where `XX` is a number, this determines how many times each video fragment will retry downloading after failing. If your connection is spotty or your downloads keep failing, adding this argument might help.
+`--fragment-abort`: Setting that stops the program if rooster fails to download all fragments of a video. Default is ON, passing this flag turns it OFF (program will continue)
 
 
 
