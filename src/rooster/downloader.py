@@ -260,7 +260,7 @@ def is_tool(name):
 
 def get_itemname(data) -> str:
     # roosterteeth-test appended for test purposes. -test will be removed
-    return f"roosterteeth-{data["id_numerical"]}"
+    return f"roosterteeth-{data['id_numerical']}"
     # if data["episode_type"] == "bonus_feature":
     #     return f"roosterteeth-{data['id_numerical']}-bonus"
     # else:
