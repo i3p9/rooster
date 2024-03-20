@@ -212,7 +212,7 @@ def main():
         help="Number of attempts to retry downloading fragments (default is 10)",
     )
     parser.add_argument(
-        "--fragment-abort",
+        "--skip-corrupt-fragments",
         action="store_true",
         help="Abort if fail to download fragment (default on)",
     )
