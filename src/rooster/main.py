@@ -265,6 +265,7 @@ def main():
             randomize,
         )
     else:
+        input_value = input_value.strip()
         if validators.url(input_value):
             url_parts = input_value.split("/")
             if "roosterteeth.com" in url_parts and "series" in url_parts:

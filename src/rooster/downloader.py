@@ -711,6 +711,7 @@ def downloader(
     fragment_retries,
     fragment_abort,
     keep_after_upload,
+    ignore_existing,
 ):
     video_options = {
         "username": username,
@@ -818,9 +819,13 @@ def downloader(
                     md=ia_metadata,
                     episoda_data=episode_data,
                     keep_after_upload=keep_after_upload,
+                    ignore_existing=ignore_existing,
                 )
                 if upload_status is not True:
-                    print("Something went wrong with the upload, try again later.")
+                    if not ignore_existing:
+                        print("Something went wrong with the upload, try again later.")
+                    else:
+                        print("Should be updated, please do a simple manual check! WIP")
                 else:
                     if not keep_after_upload:
                         shutil.rmtree(container_dir)
@@ -1160,12 +1165,14 @@ def show_stuff(
     update_metadata,
 ):
     if not is_tool("ffmpeg"):
-        print("ffmpeg not installed, go do that")
+        print(f"{bcolors.WARNING}ffmpeg not installed, go do that{bcolors.ENDC}")
         exit()
     # check manually
     if fast_check:
         if exists_in_downloaded_log(slug=vod_url.split("/")[-1], slugs=total_slugs):
-            print(f"{vod_url}: URL already recorded in downloaded log")
+            print(
+                f"{bcolors.UNDERLINE}{vod_url}: URL already recorded in downloaded log{bcolors.ENDC}"
+            )
             return
 
     episode_data = None
@@ -1178,7 +1185,7 @@ def show_stuff(
         api_url = get_rt_api_url(url=vod_url)
         episode_data = get_episode_data_from_rt_api(api_url)
         if episode_data is None:
-            print("Secondary method failed yikes, trying last resort")
+            print("Secondary method failed, yikes, trying last resort")
             alt_api_url = get_api_url(url=vod_url)
             episode_data = get_episode_data_from_api(alt_api_url)
 
@@ -1186,7 +1193,9 @@ def show_stuff(
     if update_metadata is True:
         item_exists, identifier = check_if_ia_item_exists(episode_data=episode_data)
         if item_exists is False:
-            print(f"Item doesn't exist yet, can't update metadata for {vod_url}")
+            print(
+                f"{bcolors.WARNING}Item doesn't exist yet, can't update metadata for {vod_url}{bcolors.ENDC}"
+            )
             logging.info(f"Item doesn't exist yet, can't update metadata for {vod_url}")
             return
         else:
@@ -1194,11 +1203,11 @@ def show_stuff(
             return
 
     if episode_data is None:
-        print("All 3 API Failed.. Skipping...")
+        print(f"{bcolors.FAIL}All 3 API Failed.. Skipping...{bcolors.ENDC}")
     else:
         if exists_in_archive(episode_data):
             print(
-                f'{episode_data["id_numerical"]}: {episode_data["title"]} already recorded in archive'
+                f'{bcolors.WARNING}{episode_data["id_numerical"]}: {episode_data["title"]} already recorded in archive{bcolors.ENDC}'
             )
         else:
             if fn_mode == "ia":
@@ -1207,9 +1216,11 @@ def show_stuff(
                         episode_data=episode_data
                     )
                     if item_exists is True:
+                        print()
                         print(
                             f"{bcolors.OKBLUE}Item already exists at https://archive.org/details/{identifier}{bcolors.ENDC}"
                         )
+                        print()
                         return
 
             downloader(
@@ -1223,10 +1234,11 @@ def show_stuff(
                 fragment_retries,
                 fragment_abort,
                 keep_after_upload,
+                ignore_existing,
             )
 
 
-def upload_ia(directory_location, md, episoda_data, keep_after_upload):
+def upload_ia(directory_location, md, episoda_data, keep_after_upload, ignore_existing):
     identifier_ia = get_itemname(episoda_data)
     # TODO: parse ia_config file
 
@@ -1259,14 +1271,22 @@ def upload_ia(directory_location, md, episoda_data, keep_after_upload):
                 successful_uploads += 1
 
             # Check if the URL ends with '.mp4'
-            if response.url.endswith(".mp4"):
-                print(
-                    f"{bcolors.OKGREEN}{md['title']}Uploaded Successfully at https://archive.org/details/{identifier_ia}{bcolors.ENDC}"
-                )
-                VIDEO_OKAY = True
+            if not ignore_existing:
+                if response.url.endswith(".mp4"):
+                    print()
+                    print(
+                        f"{md['title']} | {bcolors.OKGREEN}Uploaded Successfully at https://archive.org/details/{identifier_ia}{bcolors.ENDC}"
+                    )
+                    print()
+                    VIDEO_OKAY = True
 
         if successful_uploads != len(r):
-            print(f"{successful_uploads} out of {len(r)} uploaded successfully")
+            if not ignore_existing:
+                print(f"{successful_uploads} out of {len(r)} uploaded successfully")
+            else:
+                print(
+                    f"{successful_uploads} out of {len(r)} added successfully. {bcolors.OKGREEN}Check at: https://archive.org/details/{identifier_ia}{bcolors.ENDC}"
+                )
         if successful_uploads == 0:
             save_failed_upload_url_slugs(md["originalUrl"])
             print(
@@ -1320,7 +1340,7 @@ def update_ia_metadata(episode_data):
     r = item.modify_metadata(metadata=ia_meta, debug=False)
 
     if r.status_code == 200:
-        print("Update successfully queued!")
+        print(f"{bcolors.OKGREEN}Metadata update successfully queued!{bcolors.ENDC}")
         return True
     else:
         if r.text:
