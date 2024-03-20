@@ -135,5 +135,7 @@ Other parameters:
 `--fragment-retries XX`: Where `XX` is a number, this determines how many times each video fragment will retry downloading after failing. If your connection is spotty or your downloads keep failing, adding this argument might help.
 `--fragment-abort`: Setting that stops the program if rooster fails to download all fragments of a video. Default is ON, passing this flag turns it OFF (program will continue)
 
-
+---
+`README.md` written by @schmintendo and @c3someran, based on @snakepeeker's initial tutorial
+<kbd>♡RT♡</kbd> 
 
