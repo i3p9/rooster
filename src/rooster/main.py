@@ -1,32 +1,12 @@
 #!/usr/bin/python3 -B
-from .downloader import show_stuff, get_download_location
+from .downloader import show_stuff
 import argparse
 import logging
 import os
 import validators
 from .parser import RoosterTeethParser
 from pathlib import Path
-
-
-def get_download_location(fn_mode: str) -> Path:
-    """
-    Retrieves the download location based on the show mode.
-    Args: fn_mode: show | ia | archivist
-    Returns:
-        Path: A pathlib.Path object
-    """
-
-    script_path = Path.cwd()
-
-    if fn_mode == "show" or fn_mode == "archivist":
-        download_path = script_path / "Downloads"
-
-    if fn_mode == "ia":
-        # download_path = script_path / "roosterteeth-temp"
-        download_path = Path("~/.rooster").expanduser()
-
-    download_path.mkdir(parents=True, exist_ok=True)
-    return download_path
+import random
 
 
 log_dir = Path.cwd() / "logs"
@@ -74,11 +54,15 @@ def process_links_from_file(
     ignore_existing,
     keep_after_upload,
     update_metadata,
+    randomize,
 ):
     with open(filename, "r") as file:
         links = file.readlines()
         num_links = len(links)
         print(f"Found {num_links} links.")
+        if randomize:
+            print(f"Shuffling the list of {num_links} links. *shakes very violently*")
+            random.shuffle(links)
 
     for index, line in enumerate(links, start=1):
         print(f"Downloading link {index} of {num_links}: {line.strip()}")
@@ -121,8 +105,13 @@ def process_links_from_list(
     ignore_existing,
     keep_after_upload,
     update_metadata,
+    randomize,
 ):
     num_links = len(episode_links)
+    if randomize:
+        print(f"Shuffling the list of {num_links} links. *shakes very violently*")
+        random.shuffle(episode_links)
+
     for index, episode in enumerate(episode_links):
         print(f"Downloading link {index+1} of {num_links}: {episode}")
         try:
@@ -217,6 +206,12 @@ def main():
         help="Abort if fail to download fragment (default off)",
     )
 
+    parser.add_argument(
+        "--random",
+        action="store_true",
+        help="Randomize the links on runs if a txt file/series/season is provided",
+    )
+
     parser.add_argument("input", help="URL or file containing list of links")
 
     args = parser.parse_args()
@@ -237,6 +232,7 @@ def main():
     ignore_existing = args.i
     keep_after_upload = args.keep_uploads
     update_metadata = args.update_meta
+    randomize = args.random
 
     if show_flag:
         fn_mode = "show"
@@ -245,7 +241,7 @@ def main():
     elif upload_to_ia:
         fn_mode = "ia"
         print(
-            "Upload to IA is in beta, if you find any errors please ping @fhm on discord. id: 0.2.0b-a"
+            "Upload to IA is in beta, if you find any errors please ping @fhm on discord. id: 0.2.0b-2"
         )
         # exit()
 
@@ -266,6 +262,7 @@ def main():
             ignore_existing,
             keep_after_upload,
             update_metadata,
+            randomize,
         )
     else:
         if validators.url(input_value):
@@ -289,6 +286,7 @@ def main():
                         ignore_existing,
                         keep_after_upload,
                         update_metadata,
+                        randomize,
                     )
                 else:
                     print(
