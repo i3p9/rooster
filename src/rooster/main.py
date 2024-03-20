@@ -69,7 +69,7 @@ def process_links_from_file(
     use_aria,
     fn_mode,
     fragment_retries,
-    skip-corrupt-fragment,
+    fragment_abort,
     total_slugs,
     ignore_existing,
     keep_after_upload,
@@ -92,7 +92,7 @@ def process_links_from_file(
                 use_aria,
                 fn_mode,
                 fragment_retries,
-                skip-corrupt-fragment,
+                fragment_abort,
                 total_slugs,
                 ignore_existing,
                 keep_after_upload,
@@ -116,7 +116,7 @@ def process_links_from_list(
     use_aria,
     fn_mode,
     fragment_retries,
-    skip-corrupt-fragment,
+    fragment_abort,
     total_slugs,
     ignore_existing,
     keep_after_upload,
@@ -135,7 +135,7 @@ def process_links_from_list(
                 use_aria,
                 fn_mode,
                 fragment_retries,
-                skip-corrupt-fragment,
+                fragment_abort,
                 total_slugs,
                 ignore_existing,
                 keep_after_upload,
@@ -233,7 +233,7 @@ def main():
     fast_check = args.fast_check
     use_aria = args.use_aria
     fragment_retries = args.fragment_retries
-    skip-corrupt-fragment = args.skip-corrupt-fragment
+    fragment_abort = args.fragment_abort
     ignore_existing = args.i
     keep_after_upload = args.keep_uploads
     update_metadata = args.update_meta
@@ -261,7 +261,7 @@ def main():
             use_aria,
             fn_mode,
             fragment_retries,
-            skip-corrupt-fragment,
+            fragment_abort,
             total_slugs,
             ignore_existing,
             keep_after_upload,
@@ -284,7 +284,7 @@ def main():
                         use_aria,
                         fn_mode,
                         fragment_retries,
-                        skip-corrupt-fragment,
+                        fragment_abort,
                         total_slugs,
                         ignore_existing,
                         keep_after_upload,
@@ -307,7 +307,7 @@ def main():
                     use_aria=use_aria,
                     fn_mode=fn_mode,
                     fragment_retries=fragment_retries,
-                    skip-corrupt-fragment=skip-corrupt-fragment,
+                    fragment_abort=fragment_abort,
                     total_slugs=total_slugs,
                     ignore_existing=ignore_existing,
                     keep_after_upload=keep_after_upload,
