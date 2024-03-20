@@ -228,7 +228,7 @@ def main():
     fast_check = args.fast_check
     use_aria = args.use_aria
     fragment_retries = args.fragment_retries
-    fragment_abort = args.fragment_abort
+    fragment_abort = args.skip_corrupt_fragments
     ignore_existing = args.i
     keep_after_upload = args.keep_uploads
     update_metadata = args.update_meta
