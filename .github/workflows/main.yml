@@ -29,3 +29,5 @@ jobs:
         git config user.name "github-actions[bot]"
         git add README.md
         git commit -m "Update README with print statements"
+        git push
+
