@@ -25,5 +25,7 @@ jobs:
       run: |
         echo "Print statements from the latest run:" > README.md
         python main.py >> README.md
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git config user.name "github-actions[bot]"
         git add README.md
         git commit -m "Update README with print statements"
