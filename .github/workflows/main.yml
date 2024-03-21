@@ -2,7 +2,7 @@ name: Fetch updated links hourly
 
 on:
   schedule:
-    - cron: '0 * * * *'
+    - cron: '*/30 * * * *'
   workflow_dispatch:
 
 jobs:
@@ -25,4 +25,4 @@ jobs:
       run: python main.py
 
     - name: Save output to README
-      run: echo "Print statements from the latest run:" > README.md && python script.py >> README.md
+      run: echo "Print statements from the latest run:" > README.md && python main.py >> README.md
