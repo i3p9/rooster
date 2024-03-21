@@ -27,20 +27,6 @@ def format_filename(show_filter, channel_filter) -> str:
     filename += ".txt"
     return filename
 
-
-def format_start_msg(show_filter, channel_filter) -> str:
-    msg = "Starting to validate links, all of them. Filters:"
-
-    if not show_filter and not channel_filter:
-        return "Starting to validate links, all of them. Filters: None"
-    if show_filter:
-        msg += f" Show: {show_filter}"
-    if channel_filter:
-        msg += f" Channel: {channel_filter}"
-
-    return msg
-
-
 def process_chunk(chunk):
     archive_ids = [row["archive_id"] for row in chunk]
     or_conditions = "+OR+".join(id for id in archive_ids)
@@ -86,6 +72,8 @@ if __name__ == "__main__":
         for link in missing_links:
             file.write(link + "\n")
 
+    subprocess.run(["git", "config", "user.email","41898282+github-actions[bot]@users.noreply.github.com"])
+    subprocess.run(["git", "config", "user.name","github-actions[bot]"])
     subprocess.run(["git", "add", filename])
     subprocess.run(["git", "commit", "-m", "Update output file"])
 
