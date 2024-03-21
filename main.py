@@ -76,4 +76,6 @@ if __name__ == "__main__":
     subprocess.run(["git", "config", "user.name","github-actions[bot]"])
     subprocess.run(["git", "add", filename])
     subprocess.run(["git", "commit", "-m", "Update output file"])
+    subprocess.run(["git", "push"])
+
 
