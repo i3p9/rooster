@@ -7,6 +7,7 @@ from datetime import datetime
 import shutil
 import json
 import yt_dlp
+from importlib.metadata import version
 
 from .channels import get_channel_name_from_id
 from .shows import get_show_name_from_id
@@ -370,7 +371,7 @@ def generate_ia_meta(episode_data):
         season=int(season_number),
         episode=int(episode_number),
         firstExclusive=first_exclusive_bool,
-        scanner="Rooster - Roosterteeth Website Mirror 0.2.0b",
+        scanner=f"Rooster - Roosterteeth Website Mirror {version('rooster')}",
     )
     return metadata
 
