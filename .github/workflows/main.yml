@@ -1,4 +1,4 @@
-name: Fetch updated links hourly
+name: Fetch updated links every half hour
 
 on:
   schedule:
@@ -21,8 +21,9 @@ jobs:
     - name: Install dependencies
       run: pip install requests
 
-    - name: Run Python script
-      run: python main.py
-
-    - name: Save output to README
-      run: echo "Print statements from the latest run:" > README.md && python main.py >> README.md
+    - name: Save print statements to README and commit changes
+      run: |
+        echo "Print statements from the latest run:" > README.md
+        python main.py >> README.md
+        git add README.md
+        git commit -m "Update README with print statements"
