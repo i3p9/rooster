@@ -11,6 +11,7 @@ from requests.adapters import HTTPAdapter
 from requests.exceptions import RequestException
 from pathlib import Path
 import internetarchive
+from importlib.metadata import version
 
 
 def get_download_location(fn_mode: str) -> Path:
@@ -273,7 +274,7 @@ def generate_ia_meta(episode_data):
         show_title=show_title,
         season=int(season_number),
         episode=int(episode_number),
-        scanner="Rooster - Roosterteeth Website Mirror 0.1.9",
+        scanner=f"Rooster - Roosterteeth Website Mirror {version('rooster')}",
     )
     return metadata
 
