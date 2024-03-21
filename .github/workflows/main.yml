@@ -1,1 +1,29 @@
+name: Fetch updated links every half hour - urls
 
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+jobs:
+  run_script:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: pip install requests
+
+    - name: Save print statements to README and commit changes
+      run: |
+        echo "Print statements from the latest run:" > README.md
+        python main.py >> README.md
+        git add README.md
+        git commit -m "Update README with print statements"
