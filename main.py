@@ -56,7 +56,6 @@ def process_chunk(chunk):
 
 def main(filename):
     data = load_csv(filename, show_filter=SHOW_FILTER, channel_filter=CHANNEL_FILTER)
-    print(format_start_msg(show_filter=SHOW_FILTER, channel_filter=CHANNEL_FILTER))
     missing_links = []
     chunk_size = 250
     total_chunks = len(data) // chunk_size + (1 if len(data) % chunk_size != 0 else 0)
@@ -81,7 +80,11 @@ if __name__ == "__main__":
     csv_filename = "episodes_info_some.csv"
     missing_links = main(csv_filename)
 
-    filename = format_filename(show_filter=SHOW_FILTER, channel_filter=CHANNEL_FILTER)
+    filename = "output.txt"
     with open(f"{filename}", "w") as file:
         for link in missing_links:
             file.write(link + "\n")
+
+    subprocess.run(["git", "add", filename])
+    subprocess.run(["git", "commit", "-m", "Update output file"])
+
