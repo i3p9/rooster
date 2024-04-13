@@ -179,19 +179,19 @@ def main():
     parser.add_argument(
         "--i",
         action="store_true",
-        help="Ignore exisitng uploads",
+        help="Ignore exisitng uploads (DEPRECATED)",
     )
 
     parser.add_argument(
         "--keep-uploads",
         action="store_true",
-        help="Do not delete files after uploads",
+        help="Do not delete files after uploads (DEPRECATED)",
     )
 
     parser.add_argument(
         "--update-meta",
         action="store_true",
-        help="Only update metadata, nothing else",
+        help="Only update metadata, nothing else. (DEPRECATED)",
     )
 
     parser.add_argument(
@@ -241,9 +241,9 @@ def main():
     elif upload_to_ia:
         fn_mode = "ia"
         print(
-            "Upload to IA is in beta, if you find any errors please ping @fhm on discord. id: 0.2.0b-3"
+            "\033[91mUpload to IA is disabled. Please use --show / --archivist mode. Exiting...\033[0m"
         )
-        # exit()
+        exit()
 
     total_slugs = load_slugs_from_downloaded_log()
 
