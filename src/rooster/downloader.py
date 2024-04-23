@@ -745,7 +745,9 @@ def downloader(
         accepted_res = ["1080", "720", "480", "540", "360", "270"]
         if target_res in accepted_res:
             video_options["format_sort"] = [f"res:{target_res}"]
-            print(f"INFO: Tageting a resolution of {target_res} (height)")
+            print(
+                f"{bcolors.WARNING}INFO: Targeting a resolution of {target_res} (height) {bcolors.ENDC}"
+            )
 
     ## use aria2c if it exists in system
     if use_aria is True:
@@ -1269,7 +1271,7 @@ def upload_ia(
         accepted_res = ["1080", "720", "480", "540", "360", "270"]
         if target_res in accepted_res:
             md["resolution"] = target_res
-            md["not_best_resolution"] = False
+            md["not_best_resolution"] = True
 
     try:
         r = item.upload(
