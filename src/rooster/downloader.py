@@ -389,26 +389,27 @@ def has_video_and_image(directory) -> bool:
 
 def check_if_files_are_ready(directory) -> bool:
     mp4_files = list(directory.glob("*.mp4"))
+
     parts = [
-        "*.part",
-        "*.f303.*",
-        "*.f302.*",
-        "*.ytdl",
-        "*.f251.*",
-        "*.248.*",
-        "*.f247.*",
-        "*.temp",
-        "*.ytdlp",
+        re.compile(r".*\.part-Frag\d+"),
+        re.compile(r".*\.fhls-\d+"),
+        re.compile(r".*\.ytdl"),
+        re.compile(r".*\.f251\..*"),
+        re.compile(r".*\.248\..*"),
+        re.compile(r".*\.f247\..*"),
+        re.compile(r".*\.temp"),
+        re.compile(r".*\.part"),
+        re.compile(r".*\.ytdlp"),
     ]
 
     temp_files = []
-    for file_type in parts:
-        temp_files.extend(directory.glob(f"*.{file_type}"))
+    for file in directory.iterdir():
+        for pattern in parts:
+            if pattern.match(file.name):
+                temp_files.append(file)
+                break
 
-    if mp4_files:
-        if not temp_files:
-            return True
-    return False
+    return bool(mp4_files) and not temp_files
 
 
 def generate_file_name(data, fn_mode) -> str:
@@ -652,7 +653,6 @@ def download_thumb_from_yt_dlp_data(extractor_options, vod_url, episode_data, fn
 
 
 def generate_download_filename_and_dir(episode_data, fn_mode) -> Path:
-
     # Step 2: Generate File Name
     # Two type of file name:
     # Show Mode: For keeping files
@@ -712,6 +712,7 @@ def downloader(
     fragment_abort,
     keep_after_upload,
     ignore_existing,
+    target_res,
 ):
     video_options = {
         "username": username,
@@ -738,6 +739,13 @@ def downloader(
         "sleep_interval": 3,
         "max_sleep_interval": 5,
     }
+
+    # target resolution
+    if target_res:
+        accepted_res = ["1080", "720", "480", "540", "360", "270"]
+        if target_res in accepted_res:
+            video_options["format_sort"] = [f"res:{target_res}"]
+            print(f"INFO: Tageting a resolution of {target_res} (width)")
 
     ## use aria2c if it exists in system
     if use_aria is True:
@@ -813,13 +821,16 @@ def downloader(
             ready_for_upload = check_if_files_are_ready(directory=container_dir)
 
             if ready_for_upload:
-                print("Directory contains mp4 file and no incomplete parts, Uploading.")
+                print(
+                    "Directory contains mp4 file and no incomplete parts, Uploading..."
+                )
                 upload_status = upload_ia(
                     directory_location=container_dir,
                     md=ia_metadata,
                     episoda_data=episode_data,
                     keep_after_upload=keep_after_upload,
                     ignore_existing=ignore_existing,
+                    target_res=target_res,
                 )
                 if upload_status is not True:
                     if not ignore_existing:
@@ -831,7 +842,9 @@ def downloader(
                         shutil.rmtree(container_dir)
 
             else:
-                print("Directory does not contain .mp4 files. Exiting.")
+                print(
+                    "Directory does not contain .mp4 files or has incomplete files. Exiting."
+                )
                 logging.critical(
                     f"Directory does not contain .mp4 files: {container_dir}"
                 )
@@ -1163,6 +1176,7 @@ def show_stuff(
     ignore_existing,
     keep_after_upload,
     update_metadata,
+    target_res,
 ):
     if not is_tool("ffmpeg"):
         print(f"{bcolors.WARNING}ffmpeg not installed, go do that{bcolors.ENDC}")
@@ -1235,22 +1249,27 @@ def show_stuff(
                 fragment_abort,
                 keep_after_upload,
                 ignore_existing,
+                target_res,
             )
 
 
-def upload_ia(directory_location, md, episoda_data, keep_after_upload, ignore_existing):
+def upload_ia(
+    directory_location, md, episoda_data, keep_after_upload, ignore_existing, target_res
+):
     identifier_ia = get_itemname(episoda_data)
     # TODO: parse ia_config file
-
-    # if None in {s3_access_key, s3_secret_key}:
-    #     msg = "`internetarchive` configuration file is not configured" " properly."
-    #     raise Exception(msg)
 
     dir_loc_with_slash = str(directory_location) + "/"
 
     dete_after_upload = not keep_after_upload
 
     item = internetarchive.get_item(identifier=identifier_ia)
+
+    if target_res:
+        accepted_res = ["1080", "720", "480", "540", "360", "270"]
+        if target_res in accepted_res:
+            md["resolution"] = target_res
+            md["not_full_resolution"] = False
 
     try:
         r = item.upload(

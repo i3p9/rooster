@@ -55,6 +55,7 @@ def process_links_from_file(
     keep_after_upload,
     update_metadata,
     randomize,
+    target_res,
 ):
     with open(filename, "r") as file:
         links = file.readlines()
@@ -81,6 +82,7 @@ def process_links_from_file(
                 ignore_existing,
                 keep_after_upload,
                 update_metadata,
+                target_res,
             )
         except Exception as e:
             # Log the exception
@@ -106,6 +108,7 @@ def process_links_from_list(
     keep_after_upload,
     update_metadata,
     randomize,
+    target_res,
 ):
     num_links = len(episode_links)
     if randomize:
@@ -129,6 +132,7 @@ def process_links_from_list(
                 ignore_existing,
                 keep_after_upload,
                 update_metadata,
+                target_res,
             )
         except Exception as e:
             # Log the exception
@@ -212,6 +216,12 @@ def main():
         help="Randomize the links on runs if a txt file/series/season is provided",
     )
 
+    parser.add_argument(
+        "--res",
+        type=str,
+        help="Target resolution (width). options: 1080,720,540,360,270. --list-formats for more",
+    )
+
     parser.add_argument("input", help="URL or file containing list of links")
 
     args = parser.parse_args()
@@ -233,6 +243,7 @@ def main():
     keep_after_upload = args.keep_uploads
     update_metadata = args.update_meta
     randomize = args.random
+    target_res = args.res
 
     if show_flag:
         fn_mode = "show"
@@ -241,7 +252,7 @@ def main():
     elif upload_to_ia:
         fn_mode = "ia"
         print(
-            "Upload to IA is in beta, if you find any errors please ping @fhm on discord. id: 0.2.0b-3"
+            "Upload to IA is in beta, if you find any errors please ping @fhm on discord. id: 0.2.4b"
         )
         # exit()
 
@@ -263,6 +274,7 @@ def main():
             keep_after_upload,
             update_metadata,
             randomize,
+            target_res,
         )
     else:
         input_value = input_value.strip()
@@ -288,6 +300,7 @@ def main():
                         keep_after_upload,
                         update_metadata,
                         randomize,
+                        target_res,
                     )
                 else:
                     print(
@@ -311,6 +324,7 @@ def main():
                     ignore_existing=ignore_existing,
                     keep_after_upload=keep_after_upload,
                     update_metadata=update_metadata,
+                    target_res=target_res,
                 )
             else:
                 print("Unsupported RT URL. Only supports Series and Episodes")
