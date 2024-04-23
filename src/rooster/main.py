@@ -256,6 +256,13 @@ def main():
         )
         # exit()
 
+    if target_res:
+        accepted_res = ["1080", "720", "480", "540", "360", "270"]
+        if target_res not in accepted_res:
+            print("INFO: Target res: invalid value")
+            print("Accepted values: ", accepted_res)
+            exit()
+
     total_slugs = load_slugs_from_downloaded_log()
 
     if input_value.endswith(".txt"):
