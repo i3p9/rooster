@@ -31,6 +31,9 @@ class bcolors:
     UNDERLINE = "\033[4m"
 
 
+AVAILABLE_RES = ["1080", "720", "540", "360", "270"]
+
+
 def get_download_location(fn_mode: str) -> Path:
     """
     Retrieves the download location based on the show mode.
@@ -713,6 +716,7 @@ def downloader(
     keep_after_upload,
     ignore_existing,
     target_res,
+    spam_frags,
 ):
     video_options = {
         "username": username,
@@ -807,8 +811,31 @@ def downloader(
     # pass off to yt-dlp for downloading
     print("Starting download: ", episode_data["title"])
     try:
-        yt_dlp.YoutubeDL(video_options).download(vod_url)
-        print(f"{episode_data['id_numerical']} Downloaded successfully {vod_url}")
+        if not spam_frags:
+            try:
+                yt_dlp.YoutubeDL(video_options).download(vod_url)
+                print(
+                    f"{episode_data['id_numerical']} Downloaded successfully {vod_url}"
+                )
+            except:
+                logging.critical(
+                    f"{episode_data['id_numerical']} Error with yt_dlp downloading for: {vod_url}"
+                )
+        else:
+            # spam dl
+            for res in AVAILABLE_RES:
+                video_options["format_sort"] = [f"res:{res}"]
+                video_options["skip_unavailable_fragments"] = True
+
+                print(f"Spamming with {res}p Res: ")
+                logging.info(
+                    f"{episode_data['id_numerical']}: Spamming with {res}p Res"
+                )
+
+                try:
+                    yt_dlp.YoutubeDL(video_options).download(vod_url)
+                except:
+                    continue
 
         if has_video_and_image(
             full_name_with_dir.parent
@@ -1179,6 +1206,7 @@ def show_stuff(
     keep_after_upload,
     update_metadata,
     target_res,
+    spam_frags,
 ):
     if not is_tool("ffmpeg"):
         print(f"{bcolors.WARNING}ffmpeg not installed, go do that{bcolors.ENDC}")
@@ -1252,6 +1280,7 @@ def show_stuff(
                 keep_after_upload,
                 ignore_existing,
                 target_res,
+                spam_frags,
             )
 
 
