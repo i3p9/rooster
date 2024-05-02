@@ -811,6 +811,7 @@ def downloader(
                 "restrictedfilenames": True,
                 "skip_download": True,
                 "ignoreerrors": True,
+                "ignore_no_formats_error": True,
             }
             metadata_scheme["outtmpl"] = str(full_name_with_dir)
             try:
@@ -881,7 +882,7 @@ def downloader(
                     upload_metadata=upload_metadata,
                 )
                 if upload_status is not True:
-                    if not ignore_existing:
+                    if not ignore_existing or not upload_metadata:
                         print("Something went wrong with the upload, try again later.")
                     else:
                         print("Should be updated, please do a simple manual check! WIP")
@@ -1188,6 +1189,7 @@ def get_episode_data_from_ydl(username, password, vod_url):
     yt_dlp_options = {
         "username": username,
         "password": password,
+        "ignore_no_formats_error": True,
     }
     info = yt_dlp.YoutubeDL(yt_dlp_options).extract_info(url=vod_url, download=False)
     episode_data = process_yt_dlp_info_dict(info)
@@ -1377,6 +1379,10 @@ def upload_ia(
             save_failed_upload_url_slugs(md["originalUrl"])
             print(
                 "Something went wrong with the uploads. if you are updating existing item, ignore this. And any NoneType Error"
+            )
+        if upload_metadata and successful_uploads > 1:
+            print(
+                f"{md['title']} | {bcolors.OKGREEN}Uploaded METADATA Successfully at https://archive.org/details/{identifier_ia}{bcolors.ENDC}"
             )
 
         return VIDEO_OKAY
