@@ -1257,7 +1257,7 @@ def show_stuff(
                 f'{bcolors.WARNING}{episode_data["id_numerical"]}: {episode_data["title"]} already recorded in archive{bcolors.ENDC}'
             )
         else:
-            if fn_mode == "ias":
+            if fn_mode == "ia":
                 if not ignore_existing:
                     item_exists, identifier = check_if_ia_item_exists(
                         episode_data=episode_data
