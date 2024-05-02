@@ -717,6 +717,7 @@ def downloader(
     ignore_existing,
     target_res,
     spam_frags,
+    upload_incomplete,
 ):
     video_options = {
         "username": username,
@@ -826,6 +827,7 @@ def downloader(
             for res in AVAILABLE_RES:
                 video_options["format_sort"] = [f"res:{res}"]
                 video_options["skip_unavailable_fragments"] = True
+                video_options["fragment_retries"] = 50
 
                 print(f"Spamming with {res}p Res: ")
                 logging.info(
@@ -849,10 +851,13 @@ def downloader(
             container_dir = full_name_with_dir.parent
             ready_for_upload = check_if_files_are_ready(directory=container_dir)
 
-            if ready_for_upload:
-                print(
-                    "Directory contains mp4 file and no incomplete parts, Uploading..."
-                )
+            if ready_for_upload or upload_incomplete:
+                if ready_for_upload:
+                    print(
+                        "Directory contains mp4 file and no incomplete parts, Uploading..."
+                    )
+                if upload_incomplete:
+                    print("Will attempt to upload incomplete Frag files...")
                 upload_status = upload_ia(
                     directory_location=container_dir,
                     md=ia_metadata,
@@ -860,6 +865,7 @@ def downloader(
                     keep_after_upload=keep_after_upload,
                     ignore_existing=ignore_existing,
                     target_res=target_res,
+                    upload_incomplete=upload_incomplete,
                 )
                 if upload_status is not True:
                     if not ignore_existing:
@@ -1207,6 +1213,7 @@ def show_stuff(
     update_metadata,
     target_res,
     spam_frags,
+    upload_incomplete,
 ):
     if not is_tool("ffmpeg"):
         print(f"{bcolors.WARNING}ffmpeg not installed, go do that{bcolors.ENDC}")
@@ -1281,11 +1288,18 @@ def show_stuff(
                 ignore_existing,
                 target_res,
                 spam_frags,
+                upload_incomplete,
             )
 
 
 def upload_ia(
-    directory_location, md, episoda_data, keep_after_upload, ignore_existing, target_res
+    directory_location,
+    md,
+    episoda_data,
+    keep_after_upload,
+    ignore_existing,
+    target_res,
+    upload_incomplete,
 ):
     identifier_ia = get_itemname(episoda_data)
     # TODO: parse ia_config file
@@ -1301,6 +1315,9 @@ def upload_ia(
         if target_res in accepted_res:
             md["resolution"] = target_res
             md["not_best_resolution"] = True
+
+    if upload_incomplete:
+        md["incomplete"] = True
 
     try:
         r = item.upload(

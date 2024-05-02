@@ -57,6 +57,7 @@ def process_links_from_file(
     randomize,
     target_res,
     spam_frags,
+    upload_incomplete,
 ):
     with open(filename, "r") as file:
         links = file.readlines()
@@ -85,6 +86,7 @@ def process_links_from_file(
                 update_metadata,
                 target_res,
                 spam_frags,
+                upload_incomplete,
             )
         except Exception as e:
             # Log the exception
@@ -112,6 +114,7 @@ def process_links_from_list(
     randomize,
     target_res,
     spam_frags,
+    upload_incomplete,
 ):
     num_links = len(episode_links)
     if randomize:
@@ -137,6 +140,7 @@ def process_links_from_list(
                 update_metadata,
                 target_res,
                 spam_frags,
+                upload_incomplete,
             )
         except Exception as e:
             # Log the exception
@@ -225,6 +229,11 @@ def main():
         action="store_true",
         help="Spam with all available res",
     )
+    parser.add_argument(
+        "--incomplete",
+        action="store_true",
+        help="Spam with all available res",
+    )
 
     parser.add_argument(
         "--res",
@@ -255,6 +264,7 @@ def main():
     randomize = args.random
     target_res = args.res
     spam_frags = args.spam
+    upload_incomplete = args.incomplete
 
     if show_flag:
         fn_mode = "show"
@@ -294,6 +304,7 @@ def main():
             randomize,
             target_res,
             spam_frags,
+            upload_incomplete,
         )
     else:
         input_value = input_value.strip()
@@ -321,6 +332,7 @@ def main():
                         randomize,
                         target_res,
                         spam_frags,
+                        upload_incomplete,
                     )
                 else:
                     print(
@@ -346,6 +358,7 @@ def main():
                     update_metadata=update_metadata,
                     target_res=target_res,
                     spam_frags=spam_frags,
+                    upload_incomplete=upload_incomplete,
                 )
             else:
                 print("Unsupported RT URL. Only supports Series and Episodes")
