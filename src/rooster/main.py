@@ -58,6 +58,7 @@ def process_links_from_file(
     target_res,
     spam_frags,
     upload_incomplete,
+    upload_metadata,
 ):
     with open(filename, "r") as file:
         links = file.readlines()
@@ -87,6 +88,7 @@ def process_links_from_file(
                 target_res,
                 spam_frags,
                 upload_incomplete,
+                upload_metadata,
             )
         except Exception as e:
             # Log the exception
@@ -115,6 +117,7 @@ def process_links_from_list(
     target_res,
     spam_frags,
     upload_incomplete,
+    upload_metadata,
 ):
     num_links = len(episode_links)
     if randomize:
@@ -141,6 +144,7 @@ def process_links_from_list(
                 target_res,
                 spam_frags,
                 upload_incomplete,
+                upload_metadata,
             )
         except Exception as e:
             # Log the exception
@@ -236,6 +240,12 @@ def main():
     )
 
     parser.add_argument(
+        "--upload-metadata",
+        action="store_true",
+        help="Uploads everything except for videos",
+    )
+
+    parser.add_argument(
         "--res",
         type=str,
         help="Target resolution (width). options: 1080,720,540,360,270. --list-formats for more",
@@ -265,6 +275,7 @@ def main():
     target_res = args.res
     spam_frags = args.spam
     upload_incomplete = args.incomplete
+    upload_metadata = args.upload_metadata
 
     if show_flag:
         fn_mode = "show"
@@ -305,6 +316,7 @@ def main():
             target_res,
             spam_frags,
             upload_incomplete,
+            upload_metadata,
         )
     else:
         input_value = input_value.strip()
@@ -333,6 +345,7 @@ def main():
                         target_res,
                         spam_frags,
                         upload_incomplete,
+                        upload_metadata,
                     )
                 else:
                     print(
@@ -359,6 +372,7 @@ def main():
                     target_res=target_res,
                     spam_frags=spam_frags,
                     upload_incomplete=upload_incomplete,
+                    upload_metadata=upload_metadata,
                 )
             else:
                 print("Unsupported RT URL. Only supports Series and Episodes")

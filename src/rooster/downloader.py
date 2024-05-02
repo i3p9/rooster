@@ -718,6 +718,7 @@ def downloader(
     target_res,
     spam_frags,
     upload_incomplete,
+    upload_metadata,
 ):
     video_options = {
         "username": username,
@@ -766,21 +767,6 @@ def downloader(
     else:
         video_options["concurrent_fragment_downloads"] = int(concurrent_fragments)
 
-    # TODO:
-    # why am i calling the info_dict before checking if I have filename
-    # data or not? thumbnail infO? idk
-    # try:
-    #     info_dict = yt_dlp.YoutubeDL(extractor_options).extract_info(
-    #         vod_url, download=False
-    #     )
-    # except (yt_dlp.utils.DownloadError, yt_dlp.utils.ExtractorError) as err:
-    #     print(err)
-    #     print("Are you sure its a valid link?")
-    #     print("Are you sure you are logged in?")
-    #     print("If you are, are you a FIRST member?")
-    #     logging.warning(f"{err} yt-dlp parser error for {vod_url}")
-    # yt_dlp_dict_data = extract_data_from_ytdl_dict(info_dict=info_dict)
-
     ###
     # generate file name
     ## generate directory
@@ -812,32 +798,36 @@ def downloader(
     # pass off to yt-dlp for downloading
     print("Starting download: ", episode_data["title"])
     try:
-        if not spam_frags:
-            try:
-                yt_dlp.YoutubeDL(video_options).download(vod_url)
-                print(
-                    f"{episode_data['id_numerical']} Downloaded successfully {vod_url}"
-                )
-            except:
-                logging.critical(
-                    f"{episode_data['id_numerical']} Error with yt_dlp downloading for: {vod_url}"
-                )
+        if upload_metadata:
+            video_options["skip_download"] = True
+            yt_dlp.YoutubeDL(video_options).download(vod_url)
         else:
-            # spam dl
-            for res in AVAILABLE_RES:
-                video_options["format_sort"] = [f"res:{res}"]
-                video_options["skip_unavailable_fragments"] = True
-                video_options["fragment_retries"] = 50
-
-                print(f"Spamming with {res}p Res: ")
-                logging.info(
-                    f"{episode_data['id_numerical']}: Spamming with {res}p Res"
-                )
-
+            if not spam_frags:
                 try:
                     yt_dlp.YoutubeDL(video_options).download(vod_url)
+                    print(
+                        f"{episode_data['id_numerical']} Downloaded successfully {vod_url}"
+                    )
                 except:
-                    continue
+                    logging.critical(
+                        f"{episode_data['id_numerical']} Error with yt_dlp downloading for: {vod_url}"
+                    )
+            else:
+                # spam dl
+                for res in AVAILABLE_RES:
+                    video_options["format_sort"] = [f"res:{res}"]
+                    video_options["skip_unavailable_fragments"] = True
+                    video_options["fragment_retries"] = 50
+
+                    print(f"Spamming with {res}p Res: ")
+                    logging.info(
+                        f"{episode_data['id_numerical']}: Spamming with {res}p Res"
+                    )
+
+                    try:
+                        yt_dlp.YoutubeDL(video_options).download(vod_url)
+                    except:
+                        continue
 
         if has_video_and_image(
             full_name_with_dir.parent
@@ -851,13 +841,17 @@ def downloader(
             container_dir = full_name_with_dir.parent
             ready_for_upload = check_if_files_are_ready(directory=container_dir)
 
-            if ready_for_upload or upload_incomplete:
+            if ready_for_upload or upload_incomplete or upload_metadata:
                 if ready_for_upload:
                     print(
                         "Directory contains mp4 file and no incomplete parts, Uploading..."
                     )
                 if upload_incomplete:
                     print("Will attempt to upload incomplete Frag files...")
+
+                if upload_metadata:
+                    print("Will attempt to upload everything except for video file")
+
                 upload_status = upload_ia(
                     directory_location=container_dir,
                     md=ia_metadata,
@@ -866,6 +860,7 @@ def downloader(
                     ignore_existing=ignore_existing,
                     target_res=target_res,
                     upload_incomplete=upload_incomplete,
+                    upload_metadata=upload_metadata,
                 )
                 if upload_status is not True:
                     if not ignore_existing:
@@ -1214,6 +1209,7 @@ def show_stuff(
     target_res,
     spam_frags,
     upload_incomplete,
+    upload_metadata,
 ):
     if not is_tool("ffmpeg"):
         print(f"{bcolors.WARNING}ffmpeg not installed, go do that{bcolors.ENDC}")
@@ -1261,7 +1257,7 @@ def show_stuff(
                 f'{bcolors.WARNING}{episode_data["id_numerical"]}: {episode_data["title"]} already recorded in archive{bcolors.ENDC}'
             )
         else:
-            if fn_mode == "ia":
+            if fn_mode == "ias":
                 if not ignore_existing:
                     item_exists, identifier = check_if_ia_item_exists(
                         episode_data=episode_data
@@ -1289,6 +1285,7 @@ def show_stuff(
                 target_res,
                 spam_frags,
                 upload_incomplete,
+                upload_metadata,
             )
 
 
@@ -1300,6 +1297,7 @@ def upload_ia(
     ignore_existing,
     target_res,
     upload_incomplete,
+    upload_metadata,
 ):
     identifier_ia = get_itemname(episoda_data)
     # TODO: parse ia_config file
@@ -1316,7 +1314,7 @@ def upload_ia(
             md["resolution"] = target_res
             md["not_best_resolution"] = True
 
-    if upload_incomplete:
+    if upload_incomplete or upload_metadata:
         md["incomplete"] = True
 
     try:
