@@ -800,7 +800,24 @@ def downloader(
     try:
         if upload_metadata:
             video_options["skip_download"] = True
-            yt_dlp.YoutubeDL(video_options).download(vod_url)
+            video_options["ignoreerrors"] = True
+            metadata_scheme = {
+                "writeinfojson": True,
+                "writedescription": True,
+                "writesubtitles": True,
+                "sub_lang": "all",
+                "username": username,
+                "password": password,
+                "restrictedfilenames": True,
+                "skip_download": True,
+                "ignoreerrors": True,
+            }
+            metadata_scheme["outtmpl"] = str(full_name_with_dir)
+            try:
+                yt_dlp.YoutubeDL(metadata_scheme).download(vod_url)
+            except:
+                pass
+
         else:
             if not spam_frags:
                 try:
@@ -816,8 +833,9 @@ def downloader(
                 # spam dl
                 for res in AVAILABLE_RES:
                     video_options["format_sort"] = [f"res:{res}"]
-                    video_options["skip_unavailable_fragments"] = True
                     video_options["fragment_retries"] = 50
+                    video_options["keep_fragments"] = True
+                    video_options["skip_unavailable_fragments"] = True
 
                     print(f"Spamming with {res}p Res: ")
                     logging.info(
@@ -1223,16 +1241,19 @@ def show_stuff(
             return
 
     episode_data = None
-    episode_data = get_episode_data_from_ydl(
-        vod_url=vod_url, username=username, password=password
-    )
+    try:
+        episode_data = get_episode_data_from_ydl(
+            vod_url=vod_url, username=username, password=password
+        )
+    except:
+        episode_data = None
 
     if episode_data is None:
-        print("Primary method failed, trying secondary methods")
+        print("Primary data fetch method failed, trying secondary (2/3) method...")
         api_url = get_rt_api_url(url=vod_url)
         episode_data = get_episode_data_from_rt_api(api_url)
         if episode_data is None:
-            print("Secondary method failed, yikes, trying last resort")
+            print("Secondary method failed, yikes, trying the last resort...")
             alt_api_url = get_api_url(url=vod_url)
             episode_data = get_episode_data_from_api(alt_api_url)
 
