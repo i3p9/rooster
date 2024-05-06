@@ -832,11 +832,13 @@ def downloader(
                     )
             else:
                 # spam dl
+                RES_REVERSED = reversed(AVAILABLE_RES)
                 for res in AVAILABLE_RES:
                     video_options["format_sort"] = [f"res:{res}"]
                     video_options["fragment_retries"] = 50
                     video_options["keep_fragments"] = True
-                    video_options["skip_unavailable_fragments"] = True
+                    video_options["skip_unavailable_fragments"] = False
+                    video_options["download_archive"] = False
 
                     print(f"Spamming with {res}p Res: ")
                     logging.info(
@@ -845,8 +847,66 @@ def downloader(
 
                     try:
                         yt_dlp.YoutubeDL(video_options).download(vod_url)
+                        # try:
+                        #     container_dir = full_name_with_dir.parent
+                        #     file_name = generate_file_name(
+                        #         data=episode_data,
+                        #         fn_mode=fn_mode,
+                        #     )
+                        #     full_mp4_dir = container_dir / file_name + ".mp4"
+                        #     print("deleting: ", full_mp4_dir)
+                        #     os.remove(full_mp4_dir)
+                        # except FileNotFoundError:
+                        #     print("no mp4 to delete!")
                     except:
+                        # container_dir = full_name_with_dir.parent
+                        # file_name = generate_file_name(
+                        #     data=episode_data,
+                        #     fn_mode=fn_mode,
+                        # )
+                        # full_mp4_dir = container_dir / f"{file_name}.mp4"
+                        # print("deleting: ", full_mp4_dir)
+                        # print("Spam exception")
+                        # try:
+                        #     os.remove(full_mp4_dir)
+                        # except FileNotFoundError:
+                        #     print("no mp4 to delete!")
                         continue
+
+                # now merge mp4 with above frags in all res options
+                print("::final merge pass::")
+                final_merge_options = {
+                    "username": username,
+                    "password": password,
+                    "restrictedfilenames": True,
+                    "outtmpl": str(full_name_with_dir),
+                    "concurrent_fragment_downloads": 100,
+                    "merge_output_format": "mp4",
+                }
+
+                logging.info(
+                    f"{episode_data['id_numerical']}: Spamming with {res}p Res"
+                )
+
+                try:
+                    yt_dlp.YoutubeDL(final_merge_options).download(vod_url)
+                except:
+                    print("final merge: failed?")
+
+                # cleanup - delete part files
+                try:
+                    container_dir = full_name_with_dir.parent
+                    for filename in os.listdir(container_dir):
+                        if (
+                            ".part" in filename
+                            or filename.endswith(".aria2")
+                            or filename.endswith(".ytdl")
+                        ):
+                            full_path = container_dir / filename
+                            print("Deleting part files:", full_path)
+                            os.remove(full_path)
+                except FileNotFoundError:
+                    print("No part files to delete!")
 
         if has_video_and_image(
             full_name_with_dir.parent
