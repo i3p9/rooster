@@ -1,3 +1,7 @@
+## Goodbye, rooster!
+> [!NOTE]
+> Rooster was created for the sole purpose of archiving roosterteeth.com, now, a dead website onced loved by millions. Rooster served its purpose to [archive everything](https://archive.org/search?query=scanner%3A%22Rooster%22) rooterteeth.com had and now getting itself archived. Who knows if it might come back from dead if anythink I like is in danger, *lets hope not, shall we?*
+---
 # rooster - roosterteeth downloader - Usage
 
 ## Installation (if you are familiar with the command line)
